@@ -1,46 +1,48 @@
 'use strict';
-
 const puppeteer = require('puppeteer');
 const fs = require('fs');
-//const devices = require('puppeteer/DeviceDescriptors');
+const mkdirp = require('mkdirp');
+const devices = require('puppeteer/DeviceDescriptors');
+const utils = require('./utils');
 
-const getPos = (links) => {
-    const ret = []
-    links.forEach((link) => {
-        const {top, left, bottom, right} = link.getBoundingClientRect();
-        ret.push(
-            {
-                top, left, bottom, right,
-                'href': link.href,
-                'parentText': link.parentElement.textContent,
-                'parentClasses': link.parentElement.className.split(' '),
-                'classes': link.className.split(' '),
-                'text': link.textContent,
-            }
-        );
+
+const outDir = 'output';
+let curDir = '';
+
+const scrape = async (link, isMobile) => {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setViewport({
+        width: 1440, //13 in full screen firefox
+        height: 806,
     });
-    return ret;
-};
-
-const sleep = (millis) => {
-    return new Promise(resolve => setTimeout(resolve, millis));
+    if (isMobile) {
+        await page.emulate(devices['iPhone X']);
+        curDir = `${outDir}/mobile`;
+    } else {
+        curDir = `${outDir}/desktop`;
+    }
+    mkdirp(curDir);
+    await page.goto(link);
+    await utils.sleep(1000);
+    await utils.scrollDown(page);
+    await page.screenshot({
+        path: `${curDir}/full.png`,
+        fullPage: true
+    });
+    
+    const links = await page.$$eval('a', utils.getPos);
+    await browser.close();
+    return links;
 }
 
-(async() => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1920, height: 1040 });
-  //await page.emulate(devices['iPhone 6']);
-  await page.goto('https://www.nytimes.com/');
-  await sleep(1000)
-  const ret = await page.$$eval('a', getPos);
-  const json = JSON.stringify(ret);
-  fs.writeFile('links.json', json, 'utf8', () => console.log('printed'));
+const link = 'https://www.nytimes.com/';
+const results = {};
+(async () => {
+    results[link] = {}
+    results[link]['desktop'] = await scrape(link, false);
+    results[link]['mobile'] = await scrape(link, true);
 
-  await page.screenshot({path: 'full.png', fullPage: true});
-
-  
-  await browser.close();
+    const json = JSON.stringify(results);
+    fs.writeFile(`${outDir}/links.json`, json, 'utf8', () => console.log('printed'));
 })();
-
-
