@@ -1,3 +1,5 @@
+// see https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect for 
+// more on getBoundingClientRect
 const getPos = (links) => {
     const ret = []
     links.forEach((link) => {
@@ -22,10 +24,12 @@ const getPos = (links) => {
     return ret;
 };
 
+// modified from here: https://stackoverflow.com/a/53590610
 const sleep = (millis) => {
     return new Promise(resolve => setTimeout(resolve, millis));
 }
 
+// from here: https://stackoverflow.com/a/53527984
 const scrollDown = async (page) => {
     await page.evaluate(async () => {
         await new Promise((resolve, reject) => {
