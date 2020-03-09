@@ -13,7 +13,7 @@ const scrape = async (link, device, dateStr) => {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.emulate(device);
-    const niceLink = link.replace(/\//g, "-");
+    const niceLink = link.replace(/\//g, "-").replace(/:/g, '-');
     curDir = `${outDir}/${device.name}/${niceLink}`;
     mkdirp(curDir);
     await page.goto(link);
@@ -64,7 +64,7 @@ const emulatedDevices = [
 const results = {};
 (async () => {
     const date = new Date();
-    const dateStr = date.toString();
+    const dateStr = date.toString().replace(/:/g, '-');
     const promises = [];
     for (const device of emulatedDevices) {
         results[device.name] = {};
