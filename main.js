@@ -20,6 +20,7 @@ const scrape = async (link, device, dateStr) => {
     await utils.sleep(1000);
     await utils.scrollDown(page);
     
+    console.log(`${curDir}/${dateStr}.png`);
     await page.screenshot({
         path: `${curDir}/${dateStr}.png`,
         fullPage: true
@@ -33,15 +34,16 @@ const scrape = async (link, device, dateStr) => {
 }
 
 const links = [
-    'https://www.nytimes.com/',
-    //'https://www.google.com/search?q=basketball',
+    //'https://www.nytimes.com/',
+    'https://www.google.com/search?q=basketball',
+    'https://www.bing.com/search?q=basketball',
 ];
 
 
-//sources: common web browser, platform, and screen resolutions: https://www.w3counter.com/globalstats.php
+// common web browser, platform, and screen resolutions: https://www.w3counter.com/globalstats.php
 // user agents: https://www.whatismybrowser.com/guides/the-latest-user-agent/chrome
 const emulatedDevices = [
-    //devices['iPhone X'],
+    devices['iPhone X'],
     //devices['Galaxy S5'],
     {
         name: 'Chrome on Windows',
@@ -60,26 +62,29 @@ const emulatedDevices = [
         },
     },
 ];
-// todo new saving structure
+// todo add delays between calls.
 const results = {};
 (async () => {
     const date = new Date();
     const dateStr = date.toString().replace(/:/g, '-');
     const promises = [];
-    for (const device of emulatedDevices) {
+    for await (const device of emulatedDevices) {
         results[device.name] = {};
-        for (const link of links) {
+        for await (const link of links) {
+            /*results[device.name][link] = {};
+            promises.push(scrape(link, device, dateStr));*/
+            const ret = await scrape(link, device, dateStr);
             results[device.name][link] = {};
-            promises.push(scrape(link, device, dateStr));
+            results[ret.device.name][ret.link][ret.dateStr] = ret.links;
         }
     }
-    await Promise.all(promises).then(rets => {
+    /*await Promise.all(promises).then(rets => {
         for (const ret of rets) {
-            results[ret.device.name][ret.link][ret.dateStr] = ret.links
+            results[ret.device.name][ret.link][ret.dateStr] = ret.links;
         };
-    });
+    });*/
     const json = JSON.stringify(results);
     const curDir = `${outDir}/${dateStr}`;
     mkdirp(curDir);
-    fs.writeFile(`${curDir}/links.json`, json, 'utf8', () => console.log('printed'));
+    fs.writeFile(`${curDir}/links.json`, json, 'utf8', () => console.log('Finished collecting data!'));
 })();
