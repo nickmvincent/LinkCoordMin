@@ -27,7 +27,9 @@ const scrape = async (link, device, dateStr) => {
     
     const links = await page.$$eval('a', utils.getPos);
     await browser.close();
-    return links, dateStr;
+    return {
+        links, device, link, dateStr
+    }
 }
 
 const links = [
@@ -39,8 +41,8 @@ const links = [
 //sources: common web browser, platform, and screen resolutions: https://www.w3counter.com/globalstats.php
 // user agents: https://www.whatismybrowser.com/guides/the-latest-user-agent/chrome
 const emulatedDevices = [
-    devices['iPhone X'],
-    devices['Galaxy S5'],
+    //devices['iPhone X'],
+    //devices['Galaxy S5'],
     {
         name: 'Chrome on Windows',
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
@@ -63,13 +65,19 @@ const results = {};
 (async () => {
     const date = new Date();
     const dateStr = date.toString();
+    const promises = [];
     for (const device of emulatedDevices) {
         results[device.name] = {};
         for (const link of links) {
             results[device.name][link] = {};
-            results[device.name][link][dateStr] = await scrape(link, device, dateStr);;
+            promises.push(scrape(link, device, dateStr));
         }
     }
+    await Promise.all(promises).then(rets => {
+        for (const ret of rets) {
+            results[ret.device.name][ret.link][ret.dateStr] = ret.links
+        };
+    });
     const json = JSON.stringify(results);
     const curDir = `${outDir}/${dateStr}`;
     mkdirp(curDir);

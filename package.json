@@ -1,0 +1,23 @@
+{
+  "name": "linkcoordmin",
+  "version": "1.0.0",
+  "description": "`npm install` `node simple.js`",
+  "main": "simple.js",
+  "dependencies": {
+    "puppeteer": "^2.1.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nickmvincent/LinkCoordMin.git"
+  },
+  "author": "Nick Vincent",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nickmvincent/LinkCoordMin/issues"
+  },
+  "homepage": "https://github.com/nickmvincent/LinkCoordMin#readme"
+}
