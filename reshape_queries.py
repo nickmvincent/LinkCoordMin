@@ -4,8 +4,8 @@ import numpy as np
 import os
 load_folder = 'search_queries'
 save_folder = 'search_queries/prepped'
-n = 5
-write_samples = False
+n = 3
+write_samples = True
 
 #%%
 from search_queries.georgetown_medical_bing import MED_QUERIES
@@ -67,6 +67,9 @@ write_batches(melted['q'], 'trend', save_folder)
 
 # %%
 if write_samples:
-    melted.sample(n)[['q']].to_csv(f'{save_folder}/trend_sample.txt', index=False, header=False)
-    med_df[0].sample(n).to_csv(f'{save_folder}/med_sample.txt', index=False, header=False)
-    top_df[1].sample(n).to_csv(f'{save_folder}/top_sample.txt', index=False, header=False)
+    melted.sample(n)[['q']].to_csv(f'{save_folder}/trend/trend_sample{n}.txt', index=False, header=False)
+    med_df[0].sample(n).to_csv(f'{save_folder}/med/med_sample{n}.txt', index=False, header=False)
+    top_df[1].sample(n).to_csv(f'{save_folder}/top/top_sample{n}.txt', index=False, header=False)
+
+
+# %%

@@ -45,52 +45,69 @@ if (['google', 'bing', 'duckduckgo'].includes(platform)) {
     }[platform]
 }
 const links = [];
-for (const x of targets) {
-    links.push(`${startStr}${x}`);
+for (const target of targets) {
+    links.push({
+        platform,
+        target,
+        link: `${startStr}${target}`,
+    });
 }
 
-const scrape = async (link, device, dateStr) => {
+const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.emulate(device);
-    const niceLink = link.replace(/\//g, "-").replace(/:/g, '-');
+    const niceLink = linkObj.link.replace(/\//g, "-").replace(/:/g, '-'); // (nice for Windows filesystem)
     curDir = `${outDir}/${device.name}/${niceLink}`;
     mkdirp(curDir);
-    await page.goto(link);
+    await page.goto(linkObj.link);
     await utils.sleep(1000);
     await utils.scrollDown(page);
     
-    console.log(`${curDir}/${dateStr}.png`);
+    const niceDateStr = dateStr.replace(/:/g, '-'); // (nice for Windows filesystem)
+    const pngPath = `${curDir}/${niceDateStr}.png`
+    console.log(pngPath);
     await page.screenshot({
-        path: `${curDir}/${dateStr}.png`,
+        path: pngPath,
         fullPage: true
     });
     
-    const links = await page.$$eval('a', utils.getPos);
+    const linkElements = await page.$$eval('a', utils.getPos);
     await browser.close();
-    return {
-        links, device, link, dateStr
-    }
+
+    const output = {
+        device,
+        dateStr,
+        linkElements,
+        queryCat,
+        queryFile,
+        deviceName: device.name,
+        link: linkObj.link,
+        platform: linkObj.platform,
+        target: linkObj.target,
+        dateAtSave: new Date().toString(),
+    };
+
+    const json = JSON.stringify(output);
+    const jsonPath = `${curDir}/${niceDateStr}.json`;
+    fs.writeFile(jsonPath, json, 'utf8', () => console.log(`Wrote to ${jsonPath}`));
 }
 
 console.log(devicesSelected);
 const results = {};
 (async () => {
     const date = new Date();
-    const dateStr = date.toString().replace(/:/g, '-');
+    const dateStr = date.toString();
     for await (const device of devicesSelected) {
         results[device.name] = {};
         for await (const link of links) {
-            const ret = await scrape(link, device, dateStr);
-            results[device.name][link] = {};
-            results[ret.device.name][ret.link][ret.dateStr] = ret.links;
+            await scrape(link, device, dateStr, queryCat, queryFile);
+            //results[device.name][link] = {};
+            //results[ret.device.name][ret.link][ret.dateStr] = ret.links;
             const sleepSecs = utils.randomIntFromInterval(sleepRange[0], sleepRange[1]);
             console.log(`Sleeping for ${sleepSecs} seconds!`);
             await utils.sleep(sleepSecs * 1000);
         }
     }
-    const json = JSON.stringify(results);
-    const curDir = `${outDir}/${dateStr}`;
-    mkdirp(curDir);
-    fs.writeFile(`${curDir}/links.json`, json, 'utf8', () => console.log('Finished collecting data!'));
+    // if you want to do something with the results json, now you can. The data will have been written into different files in output/
 })();
