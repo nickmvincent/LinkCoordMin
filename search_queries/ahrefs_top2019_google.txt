@@ -1,0 +1,100 @@
+1	facebook	232,100,000	11.77
+2	youtube	196,100,000	6.92
+3	amazon	106,200,000	4.83
+4	gmail	93,420,000	5.88
+5	google	85,820,000	4.57
+6	ebay	58,520,000	4.93
+7	yahoo	56,670,000	8.71
+8	weather	53,910,000	5.56
+9	craigslist	50,220,000	4.51
+10	yahoo mail	49,910,000	6.72
+11	google maps	42,020,000	4.02
+12	walmart	39,430,000	2.85
+13	netflix	38,780,000	3.54
+14	google translate	38,740,000	5.65
+15	google docs	29,850,000	5.38
+16	news	27,510,000	9.58
+17	translate	27,460,000	5.63
+18	home depot	26,100,000	2.81
+19	cnn	24,600,000	7.53
+20	hotmail	24,020,000	6.39
+21	fox news	23,510,000	9.13
+22	calculator	22,470,000	4.99
+23	facebook login	22,470,000	6.16
+24	google drive	22,240,000	4.31
+25	maps	21,140,000	3.5
+26	usps tracking	20,290,000	3.52
+27	msn	20,110,000	13
+28	lowes	18,440,000	2.73
+29	paypal	18,070,000	2.62
+30	google classroom	17,900,000	4.92
+31	instagram	17,250,000	2.58
+32	target	17,250,000	2.37
+33	bank of america	16,800,000	4.39
+34	espn	16,780,000	6.24
+35	wells fargo	15,970,000	4.43
+36	aol mail	15,950,000	10.99
+37	zillow	15,480,000	2.87
+38	pinterest	15,030,000	3.14
+39	twitter	14,860,000	3.39
+40	entertainment	14,400,000	5.48
+41	indeed	14,380,000	3.5
+42	you tube	14,190,000	4.98
+43	best buy	14,070,000	2.06
+44	speed test	13,950,000	2.98
+45	trump	13,370,000	10.45
+46	linkedin	13,240,000	2.83
+47	roblox	13,200,000	4.82
+48	amazon prime	12,510,000	2.64
+49	youtube to mp3	12,050,000	3.81
+50	capital one	11,090,000	3.33
+51	sports	11,080,000	3.79
+52	chase	10,850,000	4.26
+53	nba	10,790,000	9.72
+54	costco	10,730,000	2.38
+55	aol	10,600,000	10.85
+56	hulu	10,560,000	2.43
+57	ups tracking	10,410,000	2.55
+58	traductor	10,380,000	8.22
+59	reddit	10,280,000	3.87
+60	kohls	9,880,000	2.58
+61	bing	9,760,000	5.87
+62	pandora	9,560,000	2.77
+63	american airlines	9,250,000	2.41
+64	nfl	9,250,000	6.11
+65	etsy	8,780,000	2.69
+66	twitch	8,580,000	3.17
+67	airbnb	8,540,000	2.22
+68	usps	8,540,000	2.2
+69	finance	8,440,000	13.8
+70	pizza hut	8,420,000	2.01
+71	google flights	8,250,000	4.27
+72	dominos	8,220,000	2.09
+73	spotify	8,080,000	1.82
+74	fb	7,930,000	12.46
+75	macys	7,930,000	2.72
+76	google scholar	7,780,000	4.65
+77	expedia	7,710,000	2.49
+78	fedex tracking	7,320,000	2.53
+79	verizon	7,230,000	2.02
+80	123movies	7,120,000	3.52
+81	united airlines	6,870,000	2.12
+82	wells fargo login	6,820,000	4.23
+83	you	6,810,000	2.43
+84	discord	6,760,000	2.36
+85	restaurants near me	6,730,000	2.25
+86	outlook	6,720,000	2.93
+87	google news	6,700,000	8.45
+88	bed bath and beyond	6,640,000	1.92
+89	walgreens	6,480,000	1.93
+90	credit karma	6,470,000	2.29
+91	facebook log in	6,430,000	5.17
+92	harbor freight	6,140,000	2.2
+93	pof	6,030,000	10.07
+94	solitaire	6,010,000	11.66
+95	xfinity	6,010,000	2.45
+96	ikea	5,930,000	1.88
+97	timer	5,910,000	4.73
+98	nfl scores	5,900,000	6.03
+99	autozone	5,890,000	2.05
+100	gamestop	5,890,000	2.15
