@@ -73,7 +73,6 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
     });
     
     const linkElements = await page.$$eval('a', utils.getPos);
-    await browser.close();
 
     const output = {
         device,
@@ -91,6 +90,14 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
     const json = JSON.stringify(output);
     const jsonPath = `${curDir}/${niceDateStr}.json`;
     fs.writeFile(jsonPath, json, 'utf8', () => console.log(`Wrote to ${jsonPath}`));
+
+    const mhtmlPath = `${curDir}/${niceDateStr}.mhtml`;
+    const cdp = await page.target().createCDPSession();
+    const { data } = await cdp.send('Page.captureSnapshot', { format: 'mhtml' });
+    fs.writeFileSync(mhtmlPath, data);
+
+    // === all done! == //
+    await browser.close();
 }
 
 console.log(devicesSelected);
