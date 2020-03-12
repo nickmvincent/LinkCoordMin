@@ -12,6 +12,13 @@ To run script that
 
 `node collect.js iphonex google med med_sample3`
 
+`node collect.js allDevices google trend trend_0`
+`node collect.js allDevices bing trend trend_0`
+`node collect.js allDevices duckduckgo trend trend_0`
+
+
+
+
 
 
 ## Data visualization and analysis

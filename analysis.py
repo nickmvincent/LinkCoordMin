@@ -97,7 +97,7 @@ def norm_df(df, mobile=False):
     domains = [
         'wikipedia',
         'twitter', 'youtube',
-        'facebook',
+        'facebook', 'reddit',
     ]
 
     df['platform_ugc'] = df['domain'].str.contains('|'.join(
@@ -155,17 +155,19 @@ def norm_df(df, mobile=False):
 #%%
 # Experiment parameters (which experiments to load)
 devices = [
-    'iPhone X',
+    'Chrome on Mac',
+    # 'iPhone X',
 ]
 search_engines = [
     'google',
-    #'bing',
+    'bing',
     #'duckduckgo',
 ]
 query_sets = [
     #'top',
-    'med',
+    #'med',
     #'trend',
+    'covid19'
 ]
 configs = []
 for device in devices:
@@ -185,7 +187,7 @@ for file in glob.glob('output/**/*.json', recursive=True):
     print(file)
     with open(file, 'r', encoding='utf8') as f:
         d = json.load(f)
-    print(d.keys())
+    #print(d.keys())
     rows.append(d)
 #%%
 full_df = pd.DataFrame(rows)
@@ -247,7 +249,7 @@ pd.concat(for_concat_list)['domain'].value_counts()[:15]
 
 #%%
 # create the coordinate visualization
-DO_COORDS = True
+DO_COORDS = False
 if DO_COORDS:
     for config in configs:
         device = config['device']
