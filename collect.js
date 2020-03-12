@@ -71,8 +71,13 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
         path: pngPath,
         fullPage: true
     });
+    let linkElements;
+    try {
+        linkElements = await page.$$eval('a', utils.getPos);
+    } catch (e) {
+        console.log(e);
+    }
     
-    const linkElements = await page.$$eval('a', utils.getPos);
 
     const output = {
         device,

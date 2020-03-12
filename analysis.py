@@ -161,7 +161,7 @@ devices = [
 search_engines = [
     'google',
     'bing',
-    #'duckduckgo',
+    'duckduckgo',
 ]
 query_sets = [
     #'top',
@@ -242,6 +242,12 @@ for config in configs:
     for_concat_list.append(for_concat_df)
 pd.concat(for_concat_list)['domain'].value_counts()[:15]
 
+
+#%%
+tmp = dfs['Chrome on Mac']['bing']['covid19']
+list(
+    tmp[tmp.wikipedia_appears].href.apply(lambda x: x.replace('http://', '').replace('https://', '')).unique()
+)
 
 #%%
 # source: https://stackoverflow.com/questions/30227466/combine-several-images-horizontally-with-python
@@ -379,7 +385,7 @@ for config in configs:
     matches = set(df[df.wikipedia_appears == True]['target'])
 
     row_dict = {
-        'queries': queries,
+        'query_cat': query_cat,
         'search_engine': search_engine,
         'device': device,
         'inc_rate': inc_rate,
