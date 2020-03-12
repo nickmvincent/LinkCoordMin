@@ -2,12 +2,52 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
-const devices = require('puppeteer/DeviceDescriptors');
+// utilities: get <a> positions, sleep, scrollDown, random interval
 const utils = require('./utils');
+// default mobile devices and custom "desktop devices"
+const emulatedDevices = require('./emulatedDevices');
 
 
 const outDir = 'output';
+const sleepRange = [15, 30];
 let curDir = '';
+
+
+const myArgs  = process.argv.slice(2);
+let devicesSelected = [];
+if (myArgs[0] == 'allDevices'){
+    console.log('Using all devices specifide in emulatedDevices.js');
+    for (const key of Object.keys(emulatedDevices)) {
+        devicesSelected.push(emulatedDevices[key]);
+        console.log(emulatedDevices[key]);
+    }
+} else {
+    devicesSelected.push(emulatedDevices[myArgs[0]])
+}
+const platform = myArgs[1];
+const queryCat = myArgs[2];
+const queryFile = myArgs[3];
+
+const target_file = `search_queries/prepped/${queryCat}/${queryFile}.txt`;
+const text = fs.readFileSync(target_file, "utf-8");
+const targets = text.split("\n").filter(Boolean);// removes empty strings
+
+/*=====
+If we are scraping search engines, we need to make our keywords into URLs
+If we are scraping other sites, the "keywords" should already be full urls
+=====*/
+let startStr = '';
+if (['google', 'bing', 'duckduckgo'].includes(platform)) {
+    startStr = {
+        google: 'https://www.google.com/search?q=',
+        bing: 'https://www.bing.com/search?q=',
+        duckduckgo: 'https://www.duckduckgo.com/?q=',
+    }[platform]
+}
+const links = [];
+for (const x of targets) {
+    links.push(`${startStr}${x}`);
+}
 
 const scrape = async (link, device, dateStr) => {
     const browser = await puppeteer.launch();
@@ -33,56 +73,22 @@ const scrape = async (link, device, dateStr) => {
     }
 }
 
-const links = [
-    //'https://www.nytimes.com/',
-    'https://www.google.com/search?q=basketball',
-    'https://www.bing.com/search?q=basketball',
-];
-
-
-// common web browser, platform, and screen resolutions: https://www.w3counter.com/globalstats.php
-// user agents: https://www.whatismybrowser.com/guides/the-latest-user-agent/chrome
-const emulatedDevices = [
-    devices['iPhone X'],
-    //devices['Galaxy S5'],
-    {
-        name: 'Chrome on Windows',
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
-        viewport: {
-            width: 1024, 
-            height: 768,
-        }
-    },
-    {
-        name: 'Chrome on Mac',
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
-        viewport: {
-            width: 1024,
-            height: 768,
-        },
-    },
-];
-// todo add delays between calls.
+console.log(devicesSelected);
 const results = {};
 (async () => {
     const date = new Date();
     const dateStr = date.toString().replace(/:/g, '-');
-    const promises = [];
-    for await (const device of emulatedDevices) {
+    for await (const device of devicesSelected) {
         results[device.name] = {};
         for await (const link of links) {
-            /*results[device.name][link] = {};
-            promises.push(scrape(link, device, dateStr));*/
             const ret = await scrape(link, device, dateStr);
             results[device.name][link] = {};
             results[ret.device.name][ret.link][ret.dateStr] = ret.links;
+            const sleepSecs = utils.randomIntFromInterval(sleepRange[0], sleepRange[1]);
+            console.log(`Sleeping for ${sleepSecs} seconds!`);
+            await utils.sleep(sleepSecs * 1000);
         }
     }
-    /*await Promise.all(promises).then(rets => {
-        for (const ret of rets) {
-            results[ret.device.name][ret.link][ret.dateStr] = ret.links;
-        };
-    });*/
     const json = JSON.stringify(results);
     const curDir = `${outDir}/${dateStr}`;
     mkdirp(curDir);
