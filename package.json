@@ -4,7 +4,9 @@
   "description": "`npm install` `node simple.js`",
   "main": "simple.js",
   "dependencies": {
-    "puppeteer": "^2.1.1"
+    "puppeteer": "^2.1.1",
+    "puppeteer-extra": "^3.1.9",
+    "puppeteer-extra-plugin-stealth": "^2.4.9"
   },
   "devDependencies": {},
   "scripts": {

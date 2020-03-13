@@ -1,5 +1,8 @@
 'use strict';
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+puppeteer.use(StealthPlugin())
+
 const fs = require('fs');
 const mkdirp = require('mkdirp');
 // utilities: get <a> positions, sleep, scrollDown, random interval
@@ -54,29 +57,32 @@ for (const target of targets) {
 }
 
 const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    console.log('Browser launched and page loaded');
-    await page.emulate(device);
-    page.evaluateOnNewDocument(() => {
-        window.navigator.geolocation.getCurrentPosition = function () {
-            return {
-                'coords': {
-                    accuracy: 21,
-                    altitude: null,
-                    altitudeAccuracy: null,
-                    heading: null,
-                    latitude: 41.8988,
-                    longitude: -87.6229,
-                    speed: null
-                },
-            }
-        };
-    });
     const niceLink = linkObj.link.replace(/\//g, "-").replace(/:/g, '-'); // (nice for Windows filesystem)
     curDir = `${outDir}/${device.name}/${niceLink}`;
     mkdirp(curDir);
+    
+    const browser = await puppeteer.launch({headless: false});
+    const context = browser.defaultBrowserContext();
+    context.clearPermissionOverrides();
+    await context.overridePermissions(linkObj.link, ['geolocation']);
+    const page = await context.newPage();
+
+    page.on('dialog', async dialog => {
+        console.log(dialog.message());
+        await dialog.accept();
+      });
+
+    await page.emulate(device);
+
+    await page.setGeolocation({
+        latitude: 37.7749, //41.8988,
+        longitude: -122.4194, //-87.6229,
+      });
+    console.log('Browser launched and page loaded');
+    // https://stackoverflow.com/a/51250754nom
+    
     await page.goto(linkObj.link);
+    
     await utils.sleep(1000);
     await utils.scrollDown(page);
     console.log('Loaded page, slept 1 sec, and scrolled down.');
