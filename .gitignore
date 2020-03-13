@@ -1,4 +1,9 @@
 node_modules/
 package-lock.json
 output/
+server_output/
 reports/
+
+.DS_Store
+*.cpython-36.pyc
+settings.json

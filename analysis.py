@@ -155,8 +155,8 @@ def norm_df(df, mobile=False):
 #%%
 # Experiment parameters (which experiments to load)
 devices = [
-    'Chrome on Mac',
-    # 'iPhone X',
+    'Chrome on Windows',
+    'iPhone X',
 ]
 search_engines = [
     'google',
@@ -183,7 +183,7 @@ for device in devices:
 #%%
 # load all json files
 rows = []
-for file in glob.glob('output/**/*.json', recursive=True):
+for file in glob.glob('server_output/**/*.json', recursive=True):
     print(file)
     with open(file, 'r', encoding='utf8') as f:
         d = json.load(f)
@@ -201,7 +201,7 @@ for config in configs:
     device_name = config['device']
     search_engine = config['search_engine']
     query_cat = config['query_cat']
-    print(device, search_engine, query_cat)
+    print(device_name, search_engine, query_cat)
 
     sub = full_df[
         (full_df.deviceName == device_name) &
@@ -217,12 +217,12 @@ for config in configs:
 
     links_df = pd.DataFrame(links_rows)
 
-    dfs[device][search_engine][query_cat] = norm_df(pd.DataFrame(links_df), device == 'iPhone X')
+    dfs[device_name][search_engine][query_cat] = norm_df(pd.DataFrame(links_df), device == 'iPhone X')
 
 #%%
 # let's see which query_cat we're missing and write a new file to scrape them
 for config in configs:
-    device = config['device']
+    device_name = config['device']
     search_engine = config['search_engine']
     query_cat = config['query_cat']
     # TODO
@@ -232,19 +232,19 @@ for config in configs:
 # Let's see which links are most common
 for_concat_list = []
 for config in configs:
-    device = config['device']
-    if device == 'mobile':
+    device_name = config['device']
+    if device_name == 'mobile':
         continue
     search_engine = config['search_engine']
     query_cat = config['query_cat']
     print(device, search_engine, query_cat)
-    for_concat_df = dfs[device][search_engine][query_cat][['domain']]
+    for_concat_df = dfs[device_name][search_engine][query_cat][['domain']]
     for_concat_list.append(for_concat_df)
 pd.concat(for_concat_list)['domain'].value_counts()[:15]
 
 
 #%%
-tmp = dfs['Chrome on Mac']['bing']['covid19']
+tmp = dfs['Chrome on Windows']['bing']['covid19']
 list(
     tmp[tmp.wikipedia_appears].href.apply(lambda x: x.replace('http://', '').replace('https://', '')).unique()
 )
@@ -363,13 +363,13 @@ if DO_COORDS:
 # toss results in here for easy dataframe creation
 row_dicts = []
 for config in configs:
-    device = config['device']
+    device_name = config['device']
     search_engine = config['search_engine']
     query_cat = config['query_cat']
 
-    print(device, search_engine, query_cat)
-    k = f'{device}_{search_engine}_{query_cat}'
-    df = dfs[device][search_engine][query_cat]
+    print(device_name, search_engine, query_cat)
+    k = f'{device_name}_{search_engine}_{query_cat}'
+    df = dfs[device_name][search_engine][query_cat]
     if type(df) == defaultdict:
         continue
 
@@ -377,8 +377,7 @@ for config in configs:
     rh_inc_rate = df.groupby('target').wikipedia_appears_rh.agg(any).mean()
     lh_inc_rate = df.groupby('target').wikipedia_appears_lh.agg(any).mean()
 
-
-    if device == 'mobile':
+    if device_name in ['iPhone X', 'Galaxy S5']:
         d = mobile_lines
     else:
         d = desktop_lines
@@ -387,7 +386,7 @@ for config in configs:
     row_dict = {
         'query_cat': query_cat,
         'search_engine': search_engine,
-        'device': device,
+        'device_name': device_name,
         'inc_rate': inc_rate,
         'rh_inc_rate': rh_inc_rate,
         'lh_inc_rate': lh_inc_rate,
@@ -425,7 +424,7 @@ AF_UB = 'Above-the-fold incidence (upper bound)'
 
 
 cols = [
-    'device', 'search_engine', 'queries', 'inc_rate', 'rh_inc_rate',
+    'device_name', 'search_engine', 'query_cat', 'inc_rate', 'rh_inc_rate',
     'lh_inc_rate',
 ]
 for name in mobile_lines.keys():
@@ -434,8 +433,8 @@ print(cols)
 
 renamed = results_df[cols]
 renamed.rename(columns={
-    'device': 'Device', 'search_engine': 'Search Engine',
-    'queries': 'Query Category', 'inc_rate': FP,
+    'device_name': 'Device', 'search_engine': 'Search Engine',
+    'query_cat': 'Query Category', 'inc_rate': FP,
     'rh_inc_rate': RH,
     'lh_inc_rate': LH,
     'lh_noscroll_lb_inc_rate': LH_AF_LB,
@@ -493,15 +492,20 @@ renamed[
 renamed
 
 #%%
-baseline_df = results_df[['device', 'search_engine', 'queries', 'twitter_inc_rate', 'youtube_inc_rate', 'facebook_inc_rate']]
+baseline_df = results_df[['device_name', 'search_engine', 'query_cat', 'twitter_inc_rate', 'youtube_inc_rate', 'facebook_inc_rate']]
 baseline_df.rename(columns={
-    'device': 'Device', 'search_engine': 'Search Engine',
-    'queries': 'Query Category'
+    'device_name': 'Device', 'search_engine': 'Search Engine',
+    'query_cat': 'Query Category'
 }, inplace=True)
 baseline_df.to_csv('reports/other_domains.csv', float_format="%.2f", index=False)
 
 #%%
 melted = renamed.melt(id_vars=['Device', 'Search Engine', 'Query Category'])
+#%%
+melted
+
+#%%
+
 melted.rename(columns={
     'variable': 'y-axis',
     'value': 'Incidence rate',
@@ -511,7 +515,8 @@ g = sns.catplot(
     x="Query Category", y='Incidence rate',
     hue="Search Engine", col="Device", row='y-axis',
     palette=['g', 'b', 'y'],
-    order=['common', 'trending', 'medical'],
+    #order=['common', 'trending', 'medical'],
+    order=['covid19'],
     #row_order=[FP, AF, RH],
     data=melted[melted['y-axis'] == FP], kind="bar",
     height=3, aspect=1.5, ci=None,
@@ -526,7 +531,7 @@ g = sns.catplot(
     hue="Search Engine", col='y-axis',
     col_order=[LH, RH],
     palette=['g', 'b', 'y'],
-    order=['common', 'trending', 'medical'],
+    #order=['common', 'trending', 'medical'],
     data=melted[
         ((melted['y-axis'] == LH) | (melted['y-axis'] == RH))
         & (melted['Device'] == 'desktop')],
@@ -540,7 +545,7 @@ g = sns.catplot(
     x="Query Category", y='Incidence rate',
     hue="Search Engine", col="Device", row='y-axis',
     palette=['g', 'b', 'y'],
-    order=['common', 'trending', 'medical'],
+    #order=['common', 'trending', 'medical'],
     #row_order=[FP, AF, RH],
     data=melted[melted['y-axis'] == AF_MG], kind="bar",
     height=3, aspect=1.5, ci=None,
@@ -553,7 +558,7 @@ g = sns.catplot(
     x="Query Category", y='Incidence rate',
     hue="Search Engine", col="Device", row='y-axis',
     palette=['g', 'b', 'y'],
-    order=['common', 'trending', 'medical'],
+    #order=['common', 'trending', 'medical'],
     data=melted[melted['y-axis'] == LH_AF_MG], kind="bar",
     height=2.5, aspect=1.5, ci=None,
     sharex=False,
@@ -563,11 +568,11 @@ plt.savefig('reports/LH_AF_catplot.png', dpi=300)
 
 # %%
 # differences between search engines
-results_df.groupby(['device', 'queries']).agg(lambda x: max(x) - min(x))['inc_rate']
+results_df.groupby(['device_name', 'query_cat']).agg(lambda x: max(x) - min(x))['inc_rate']
 
 #%%
 # differences between devices
-results_df.groupby(['search_engine', 'queries']).agg(lambda x: max(x) - min(x))['inc_rate']
+results_df.groupby(['search_engine', 'query_cat']).agg(lambda x: max(x) - min(x))['inc_rate']
 
 #%%
 # diff between FP and AF
@@ -578,7 +583,7 @@ melted[
 # %%
 se_minus_se = {}
 se_to_matches = {}
-sub = results_df[(results_df.device == 'mobile') & (results_df.queries == 'top')]
+sub = results_df[(results_df.device_name == 'Chrome on Windows') & (results_df.query_cat == 'covid19')]
 for i, row in sub.iterrows():
     se_to_matches[row.search_engine] = set(row.matches)
 se_to_matches
