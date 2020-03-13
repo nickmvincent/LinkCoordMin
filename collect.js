@@ -9,7 +9,7 @@ const emulatedDevices = require('./emulatedDevices');
 
 
 const outDir = 'output';
-const sleepRange = [15, 30];
+const sleepRange = [30, 60];
 let curDir = '';
 
 
@@ -56,13 +56,30 @@ for (const target of targets) {
 const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
+    console.log('Browser launched and page loaded');
     await page.emulate(device);
+    page.evaluateOnNewDocument(() => {
+        window.navigator.geolocation.getCurrentPosition = function () {
+            return {
+                'coords': {
+                    accuracy: 21,
+                    altitude: null,
+                    altitudeAccuracy: null,
+                    heading: null,
+                    latitude: 41.8988,
+                    longitude: -87.6229,
+                    speed: null
+                },
+            }
+        };
+    });
     const niceLink = linkObj.link.replace(/\//g, "-").replace(/:/g, '-'); // (nice for Windows filesystem)
     curDir = `${outDir}/${device.name}/${niceLink}`;
     mkdirp(curDir);
     await page.goto(linkObj.link);
     await utils.sleep(1000);
     await utils.scrollDown(page);
+    console.log('Loaded page, slept 1 sec, and scrolled down.');
     
     const niceDateStr = dateStr.replace(/:/g, '-'); // (nice for Windows filesystem)
     const pngPath = `${curDir}/${niceDateStr}.png`
@@ -76,8 +93,7 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
         linkElements = await page.$$eval('a', utils.getPos);
     } catch (e) {
         console.log(e);
-    }
-    
+    }    
 
     const output = {
         device,
