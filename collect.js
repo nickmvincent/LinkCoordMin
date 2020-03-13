@@ -61,7 +61,10 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
     curDir = `${outDir}/${device.name}/${niceLink}`;
     mkdirp(curDir);
     
-    const browser = await puppeteer.launch({headless: false});
+    const browser = await puppeteer.launch({
+        args: ['--no-sandbox'],
+        headless: true
+    });
     const context = browser.defaultBrowserContext();
     context.clearPermissionOverrides();
     await context.overridePermissions(linkObj.link, ['geolocation']);
@@ -75,8 +78,8 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
     await page.emulate(device);
 
     await page.setGeolocation({
-        latitude: 37.7749, //41.8988,
-        longitude: -122.4194, //-87.6229,
+        latitude: 41.8988, // 37.7749, //sf lat
+        longitude: -87.6229, // -122.4194, // sf long
       });
     console.log('Browser launched and page loaded');
     // https://stackoverflow.com/a/51250754nom
@@ -143,5 +146,5 @@ const results = {};
             await utils.sleep(sleepSecs * 1000);
         }
     }
-    // if you want to do something with the results json, now you can. The data will have been written into different files in output/
+    // if you want to do something with the results json, can add code here. The data will have been written into different files in output/
 })();
