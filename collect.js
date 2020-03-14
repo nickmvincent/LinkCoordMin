@@ -56,53 +56,127 @@ for (const target of targets) {
     });
 }
 
+const coords = {
+    hancock: {
+        lat: 41.8988,
+        long: -87.6229,
+    },
+    sf: {
+        lat: 37.7749,
+        long: -122.4194
+    },
+    uw: {
+        lat: 47.655548,
+        long: -122.303200
+    }
+}
+
 const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
     const niceLink = linkObj.link.replace(/\//g, "-").replace(/:/g, '-'); // (nice for Windows filesystem)
+    const niceDateStr = dateStr.replace(/:/g, '-'); // (nice for Windows filesystem)
+
     curDir = `${outDir}/${device.name}/${niceLink}`;
     mkdirp(curDir);
     
     const browser = await puppeteer.launch({
         args: ['--no-sandbox'],
-        headless: true
+        headless: false
     });
     const context = browser.defaultBrowserContext();
     context.clearPermissionOverrides();
     await context.overridePermissions(linkObj.link, ['geolocation']);
     const page = await context.newPage();
+    await page.emulate(device);
+    await page.setGeolocation({
+        latitude: coords['uw']['lat'],
+        longitude: coords['uw']['long'],
+        //accuracy: 100,
+    });
+
+    // await page.evaluateOnNewDocument(function () {
+	// 	navigator.geolocation.getCurrentPosition = function (cb) {
+	// 		setTimeout(() => {
+	// 			cb({
+	// 				'coords': {
+	// 					accuracy: 100,
+	// 					altitude: null,
+	// 					altitudeAccuracy: null,
+	// 					heading: null,
+	// 					latitude: coords['uw']['lat'],
+	// 					longitude: coords['uw']['long'],
+	// 					speed: null
+	// 				}
+	// 			})
+	// 		}, 1000)
+	// 	}
+	// });
 
     page.on('dialog', async dialog => {
         console.log(dialog.message());
         await dialog.accept();
-      });
+    });
+    page.on('console', consoleObj => console.log(consoleObj.text()));
+    
 
-    await page.emulate(device);
-
-    await page.setGeolocation({
-        latitude: 41.8988, // 37.7749, //sf lat
-        longitude: -87.6229, // -122.4194, // sf long
-      });
+    // await cdp.send("Network.enable");
+    // const setCookie = await cdp.send("Emulation.setGeolocationOverride", {
+    //     latitude: ,
+    //     longitude: ,
+    //     accuracy: 100
+    // });
+    
     console.log('Browser launched and page loaded');
     // https://stackoverflow.com/a/51250754nom
-    
-    await page.goto(linkObj.link);
-    
+
+    await page.goto(linkObj.link, {waitUntil: 'networkidle2'});
     await utils.sleep(1000);
+    await page.evaluate(() => {
+        for (const a of document.querySelectorAll("a")) {
+            //console.log(a);
+            if (
+                a.textContent.includes("Use precise location") ||
+                a.textContent.includes("Enable Location")
+            ) {
+                console.log('clicking link')
+                a.click();
+                window.location.reload(false); 
+                break;
+            } else if (
+                a.id === 'ChangeLocationLink'
+            ) { 
+                console.log('Found bing change location link');
+                a.click();
+                setTimeout(() => {
+                    for (const input of document.querySelectorAll('input')) {
+                        console.log(input.value);
+                        if (input.value === 'Allow') {
+                            console.log('found allow');
+                            input.click();
+                            break;
+                        }
+                    }
+                }, 1000)
+            }
+        }
+    });
+    await utils.sleep(10000);
     await utils.scrollDown(page);
+    
     console.log('Loaded page, slept 1 sec, and scrolled down.');
     
-    const niceDateStr = dateStr.replace(/:/g, '-'); // (nice for Windows filesystem)
     const pngPath = `${curDir}/${niceDateStr}.png`
     console.log(pngPath);
     await page.screenshot({
         path: pngPath,
         fullPage: true
     });
+    
     let linkElements;
     try {
         linkElements = await page.$$eval('a', utils.getPos);
     } catch (e) {
         console.log(e);
-    }    
+    }
 
     const output = {
         device,

@@ -3,77 +3,43 @@
 # defaults
 import json
 import glob
-import sys
-from collections import defaultdict
-from urllib.parse import urlparse
 from pprint import pprint
-
-
-# plotting
-import matplotlib.pyplot as plt
-import matplotlib
-import seaborn as sns
+from collections import defaultdict
 
 # scipy
 import pandas as pd
 import numpy as np
 
+# plotting / images
+import matplotlib.pyplot as plt
+import matplotlib
+import seaborn as sns
 from PIL import Image
 
-infinite_defaultdict = lambda: defaultdict(infinite_defaultdict)
-def recurse_print_infinitedict(d, prefix=''):
-    if type(d) != defaultdict:
-        print(prefix, d)
-        return
-    for k, v in d.items():
-        print(prefix, k)
-        recurse_print_infinitedict(v, prefix + ' ')
+# helpers for this project
+from helpers import infinite_defaultdict, recurse_print_infinitedict, extract
+from constants import CONSTANTS
 
+#%% [markdown]
+# The below function takes a dataframe of SERP / webpage links
+# and calculates the width, hiegh, and normalized coordinates.
+# It extracts the domain from each link (using urlparse(link).netloc, see helpers.py).
+# Finally, it calculates a variety of incidence rates: how often are various
+# domain appearing in the full page, above-the-fold, in the right column, etc.
+# Above-the-fold, right-hand, etc. are calculated using the constants defined above
+# such as common viewport heights for desktop and mobile devices.
 
+# to keep variables / column names short, there's some short hand here
+# lh = left-hand
+# rh = right-hand
+# noscroll = above-the-fold
 #%%
-# Display parameters
-full_width = 8
-# left hand width
-LH_W = 780
 
-#IPHONE_SE_H = 568
-IPHONE_6_H = 667
-IPHONE_6plus_H = 736
-IPHONE_X_H = 812
-
-#110% zoom
-# MACBOOK13_11_H = 717
-# MACBOOK13_FULL_H = 789
-# # 90% zoom
-# MACBOOK13_9_H = 877
-
-#https://gs.statcounter.com/screen-resolution-stats/desktop/worldwide
-MOST_COMMON = 768
-ZOOM_90 = 853
-ZOOM_110 = 698
-
-
-mobile_lines = {
-    'noscroll_lb': IPHONE_6_H,
-    'noscroll_mg': IPHONE_6plus_H,
-    'noscroll_ub': IPHONE_X_H
-}
-
-desktop_lines = {
-    'noscroll_lb': ZOOM_110,
-    'noscroll_mg': MOST_COMMON,
-    'noscroll_ub': ZOOM_90,
-}
-
-BORDER_PIX = 1440
-
-#%%
-# Helpers
-def extract(x):
-    domain = urlparse(x.href).netloc
-    return domain
-
-def norm_df(df, mobile=False):
+def prep_links_df(df, mobile=False):
+    """
+    TODO
+    see above markdown
+    """
     df['width'] = df.right - df.left
     df['height'] = df.bottom - df.top
     right_max = df['right'].max()
@@ -110,13 +76,13 @@ def norm_df(df, mobile=False):
             df['domain'].str.contains(domain) &
             (df.width != 0) & (df.height != 0)
         )
-        kp_line = LH_W / right_max
+        kp_line = CONSTANTS['lefthand_width'] / right_max
         if mobile:
-            # no right-hand incidence
+            # no left-hand or right-hand incidence
             df[f'{domain}_appears_rh'] = 0
             # no lefthand above-the-fold incidence
             df[f'{domain}_appears_lh'] = 0
-            for name, line in mobile_lines.items():
+            for name, line in CONSTANTS['mobile_lines'].items():
                 mobile_noscroll_line = line / bot_max
 
                 df[f'{domain}_appears_{name}'] = (
@@ -137,7 +103,7 @@ def norm_df(df, mobile=False):
                 (df.norm_left <= kp_line)
             )
 
-            for name, line in desktop_lines.items():
+            for name, line in CONSTANTS['desktop_lines'].items():
                 noscroll_line = line / bot_max
 
                 df[f'{domain}_appears_{name}'] = (
@@ -154,10 +120,16 @@ def norm_df(df, mobile=False):
 
 #%%
 # Experiment parameters (which experiments to load)
-devices = [
+device_names = [
     'Chrome on Windows',
     'iPhone X',
 ]
+def is_mobile(device_name):
+    """ is this device_name a mobile device"""
+    return device_name in [
+        'iPhone X', 'Galaxy S5',
+    ]
+
 search_engines = [
     'google',
     'bing',
@@ -167,38 +139,42 @@ query_sets = [
     #'top',
     #'med',
     #'trend',
-    'covid19'
+    'covid19',
 ]
 configs = []
-for device in devices:
+for device_name in device_names:
     for search_engine in search_engines:
         for query_cat in query_sets:
             configs.append({
-                'device': device,
+                'device_name': device_name,
                 'search_engine': search_engine,
                 'query_cat': query_cat,
             })
+    
 
+#%% [markdown]
+# Below: load all the files from specified directory
+# and put then load them into the "full_df" dataframe
 
 #%%
-# load all json files
 rows = []
-for file in glob.glob('server_output/**/*.json', recursive=True):
+# where are the files
+outdir = 'server_output'
+for file in glob.glob(f'{outdir}/**/*.json', recursive=True):
     print(file)
     with open(file, 'r', encoding='utf8') as f:
         d = json.load(f)
-    #print(d.keys())
     rows.append(d)
-#%%
 full_df = pd.DataFrame(rows)
-full_df
+full_df.head(3)
 
 #%%
+# we will have one df for each combination of device_name / search_engine / query_cat
 dfs = infinite_defaultdict()
-# device, search_engine, query_cat
+# this three-key dict will be use the following sequence of keys: device_name, search_engine, query_cat
 
 for config in configs:
-    device_name = config['device']
+    device_name = config['device_name']
     search_engine = config['search_engine']
     query_cat = config['query_cat']
     print(device_name, search_engine, query_cat)
@@ -217,32 +193,25 @@ for config in configs:
 
     links_df = pd.DataFrame(links_rows)
 
-    dfs[device_name][search_engine][query_cat] = norm_df(pd.DataFrame(links_df), device == 'iPhone X')
-
-#%%
-# let's see which query_cat we're missing and write a new file to scrape them
-for config in configs:
-    device_name = config['device']
-    search_engine = config['search_engine']
-    query_cat = config['query_cat']
-    # TODO
+    dfs[device_name][search_engine][query_cat] = prep_links_df(pd.DataFrame(links_df), is_mobile(device_name))
 
 
-#%%
+#%% [markdown]
 # Let's see which links are most common
+#%%
+# 
 for_concat_list = []
 for config in configs:
-    device_name = config['device']
-    if device_name == 'mobile':
-        continue
+    device_name = config['device_name']
     search_engine = config['search_engine']
     query_cat = config['query_cat']
-    print(device, search_engine, query_cat)
     for_concat_df = dfs[device_name][search_engine][query_cat][['domain']]
     for_concat_list.append(for_concat_df)
 pd.concat(for_concat_list)['domain'].value_counts()[:15]
 
 
+#%% [markdown]
+# What are the Wikipedia links showing up on desktop?
 #%%
 tmp = dfs['Chrome on Windows']['bing']['covid19']
 list(
@@ -250,29 +219,37 @@ list(
 )
 
 #%%
+# to concat images:
 # source: https://stackoverflow.com/questions/30227466/combine-several-images-horizontally-with-python
 
+#%% [markdown]
+# the below code creates visualization of our scraped links
+# critically, this means we can compare our links (used for quant analysis) 
+# with actual screenshots of SERPs or actual SERPs.
+# To facilitate even easier visual validation, the below code takes a sample of SERPS
+# and stitches the coordinate visualization and SERP screenshot together.
+# This is pretty slow, so there's a DO_COORDS flag to turn it off.
 
 #%%
 # create the coordinate visualization
 DO_COORDS = False
 if DO_COORDS:
     for config in configs:
-        device = config['device']
+        device_name = config['device_name']
         search_engine = config['search_engine']
         query_cat = config['query_cat']
 
-        print(device, search_engine, query_cat)
-        df = dfs[device][search_engine][query_cat]
+        print(device_name, search_engine, query_cat)
+        df = dfs[device_name][search_engine][query_cat]
         if type(df) == defaultdict:
             continue
         right_max = df['right'].max()
         bot_max = df['bottom'].max()
         ratio = bot_max / right_max
-        k = f'{device}_{search_engine}_{query_cat}'
+        k = f'{device_name}_{search_engine}_{query_cat}'
 
         available_targets = list(full_df[
-            (full_df.deviceName == device) & (full_df.platform == search_engine) & (full_df.queryCat == query_cat)
+            (full_df.deviceName == device_name) & (full_df.platform == search_engine) & (full_df.queryCat == query_cat)
         ].target)
 
         np.random.seed(0)
@@ -284,12 +261,12 @@ if DO_COORDS:
                 subdf = df[df['target'] == target]
             else:
                 subdf = df
-            fig, ax = plt.subplots(1, 1, figsize=(full_width, full_width * ratio))
+            fig, ax = plt.subplots(1, 1, figsize=(CONSTANTS['figure_width'], CONSTANTS['figure_width'] * ratio))
             plt.gca().invert_yaxis()
             add_last = []
             for i_row, row in subdf.iterrows():
-                # if row.width == 0 or row.height == 0:
-                #     continue
+                if row.width == 0 or row.height == 0:
+                    continue
                 x = row['left']
                 y = row['bottom']
                 width = row['width']
@@ -297,10 +274,13 @@ if DO_COORDS:
                 domain = row['domain']
 
                 if row['wikipedia_appears']:
+                    # add it to the plot last so it is on top
                     add_last.append([domain, (x,y,), width, height])
+                    
                 else:
-                    # if row['platform_ugc']:
-                    #     color = 'b'
+                    if row['platform_ugc']:
+                        color = 'b'
+                    # color internal search engine links as lightgray
                     if 'google' in domain or 'bing' in domain or 'duckduckgo' in domain:
                         color = 'lightgray'
                     else:
@@ -315,15 +295,16 @@ if DO_COORDS:
                 ax.add_patch(rect)
 
             # kp line = lefthand width border.
-            kp_line = LH_W
-            if device == 'mobile':
+            kp_line = LEFTHAND_WIDTH
+            if is_mobile(device_name)
                 scroll_line = mobile_lines['noscroll_mg']
             else:
                 scroll_line = desktop_lines['noscroll_mg']
             plt.axvline(kp_line, color='r', linestyle='-')
 
-            #border_line = BORDER_PIX / right_max
-            #plt.axvline(border_line, color='k', linestyle='-')
+            # show the right edge of the viewport
+            plt.axvline(VIEWPORT_WIDTH, color='k', linestyle='-')
+            # show the page-fold
             plt.axhline(scroll_line, color='k', linestyle='-')
 
             plt.savefig(f'reports/overlays/{k}_{target}.png')
@@ -331,9 +312,8 @@ if DO_COORDS:
                 plt.savefig(f'reports/{k}_{target}.png')
             plt.close()
             if target in chosen_ones:
-                screenshot_path = f'scraper_output/{device}/{search_engine}/{query_cat}/results.json_{target}.png'
+                screenshot_path = f'{outdir}/{device}/{search_engine}/{query_cat}/results.json_{target}.png'
                 # the overlay will be smaller
-
                 #TODO
                 try:
                     screenshot_img = Image.open(screenshot_path)
@@ -368,7 +348,6 @@ for config in configs:
     query_cat = config['query_cat']
 
     print(device_name, search_engine, query_cat)
-    k = f'{device_name}_{search_engine}_{query_cat}'
     df = dfs[device_name][search_engine][query_cat]
     if type(df) == defaultdict:
         continue
@@ -421,7 +400,6 @@ LH_AF_UB = 'Left-hand above-the-fold incidence (upper bound)'
 
 AF_LB = 'Above-the-fold incidence (lower bound)'
 AF_UB = 'Above-the-fold incidence (upper bound)'
-
 
 cols = [
     'device_name', 'search_engine', 'query_cat', 'inc_rate', 'rh_inc_rate',
@@ -567,11 +545,11 @@ plt.savefig('reports/LH_AF_catplot.png', dpi=300)
 
 
 # %%
-# differences between search engines
+# max difference between search engines
 results_df.groupby(['device_name', 'query_cat']).agg(lambda x: max(x) - min(x))['inc_rate']
 
 #%%
-# differences between devices
+# max difference between devices
 results_df.groupby(['search_engine', 'query_cat']).agg(lambda x: max(x) - min(x))['inc_rate']
 
 #%%
@@ -581,6 +559,8 @@ melted[
 ].groupby(['Device', 'Query Category', 'Search Engine']).agg(lambda x: max(x) - min(x))
 
 # %%
+# what's in the first but not in the second
+
 se_minus_se = {}
 se_to_matches = {}
 sub = results_df[(results_df.device_name == 'Chrome on Windows') & (results_df.query_cat == 'covid19')]
@@ -592,9 +572,10 @@ for k1, v1 in se_to_matches.items():
         if k1 == k2:
             continue
         se_minus_se[f'{k1}_{k2}'] = v1 - v2
-# what's in the first but not in the second
 
 #%%
+# what's in the first but not in the second
+
 pprint(se_minus_se)
 
 
