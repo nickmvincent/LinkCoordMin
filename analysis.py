@@ -22,7 +22,7 @@ from constants import CONSTANTS
 
 #%% [markdown]
 # The below function takes a dataframe of SERP / webpage links
-# and calculates the width, hiegh, and normalized coordinates.
+# and calculates the width, height, and normalized coordinates.
 # It extracts the domain from each link (using urlparse(link).netloc, see helpers.py).
 # Finally, it calculates a variety of incidence rates: how often are various
 # domain appearing in the full page, above-the-fold, in the right column, etc.
@@ -295,15 +295,15 @@ if DO_COORDS:
                 ax.add_patch(rect)
 
             # kp line = lefthand width border.
-            kp_line = LEFTHAND_WIDTH
-            if is_mobile(device_name)
-                scroll_line = mobile_lines['noscroll_mg']
+            kp_line = CONSTANTS['lefthand_width']
+            if is_mobile(device_name):
+                scroll_line = CONSTANTS['mobile_lines']['noscroll_mg']
             else:
-                scroll_line = desktop_lines['noscroll_mg']
+                scroll_line = CONSTANTS['desktop_lines']['noscroll_mg']
             plt.axvline(kp_line, color='r', linestyle='-')
 
             # show the right edge of the viewport
-            plt.axvline(VIEWPORT_WIDTH, color='k', linestyle='-')
+            plt.axvline(CONSTANTS['viewport_width'], color='k', linestyle='-')
             # show the page-fold
             plt.axhline(scroll_line, color='k', linestyle='-')
 
@@ -343,7 +343,7 @@ if DO_COORDS:
 # toss results in here for easy dataframe creation
 row_dicts = []
 for config in configs:
-    device_name = config['device']
+    device_name = config['device_name']
     search_engine = config['search_engine']
     query_cat = config['query_cat']
 
@@ -357,9 +357,9 @@ for config in configs:
     lh_inc_rate = df.groupby('target').wikipedia_appears_lh.agg(any).mean()
 
     if device_name in ['iPhone X', 'Galaxy S5']:
-        d = mobile_lines
+        d = CONSTANTS['mobile_lines']
     else:
-        d = desktop_lines
+        d = CONSTANTS['desktop_lines']
     matches = set(df[df.wikipedia_appears == True]['target'])
 
     row_dict = {
@@ -405,7 +405,7 @@ cols = [
     'device_name', 'search_engine', 'query_cat', 'inc_rate', 'rh_inc_rate',
     'lh_inc_rate',
 ]
-for name in mobile_lines.keys():
+for name in CONSTANTS['mobile_lines'].keys():
     cols += [f'{name}_inc_rate', f'lh_{name}_inc_rate']
 print(cols)
 
@@ -506,13 +506,13 @@ plt.savefig('reports/FP_catplot.png', dpi=300)
 # lh vs rh
 g = sns.catplot(
     x="Query Category", y='Incidence rate',
-    hue="Search Engine", col='y-axis',
+    hue="Search Engine", col='y-axis', row='Device',
     col_order=[LH, RH],
     palette=['g', 'b', 'y'],
     #order=['common', 'trending', 'medical'],
     data=melted[
         ((melted['y-axis'] == LH) | (melted['y-axis'] == RH))
-        & (melted['Device'] == 'desktop')],
+    ],
     kind="bar",
     height=3, aspect=1.5, ci=None,
     sharex=False,
