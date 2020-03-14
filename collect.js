@@ -16,9 +16,9 @@ const sleepRange = [30, 60];
 let curDir = '';
 
 
-const myArgs  = process.argv.slice(2);
+const myArgs = process.argv.slice(2);
 let devicesSelected = [];
-if (myArgs[0] == 'allDevices'){
+if (myArgs[0] == 'allDevices') {
     console.log('Using all devices specifide in emulatedDevices.js');
     for (const key of Object.keys(emulatedDevices)) {
         devicesSelected.push(emulatedDevices[key]);
@@ -33,7 +33,7 @@ const queryFile = myArgs[3];
 
 const target_file = `search_queries/prepped/${queryCat}/${queryFile}.txt`;
 const text = fs.readFileSync(target_file, "utf-8");
-const targets = text.split("\n").filter(Boolean);// removes empty strings
+const targets = text.split("\n").filter(Boolean); // removes empty strings
 
 /*=====
 If we are scraping search engines, we need to make our keywords into URLs
@@ -45,7 +45,7 @@ if (['google', 'bing', 'duckduckgo'].includes(platform)) {
         google: 'https://www.google.com/search?q=',
         bing: 'https://www.bing.com/search?q=',
         duckduckgo: 'https://www.duckduckgo.com/?q=',
-    }[platform]
+    } [platform]
 }
 const links = [];
 for (const target of targets) {
@@ -77,7 +77,7 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
 
     curDir = `${outDir}/${device.name}/${niceLink}`;
     mkdirp(curDir);
-    
+
     const browser = await puppeteer.launch({
         args: ['--no-sandbox'],
         headless: false
@@ -93,84 +93,60 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
         //accuracy: 100,
     });
 
-    // await page.evaluateOnNewDocument(function () {
-	// 	navigator.geolocation.getCurrentPosition = function (cb) {
-	// 		setTimeout(() => {
-	// 			cb({
-	// 				'coords': {
-	// 					accuracy: 100,
-	// 					altitude: null,
-	// 					altitudeAccuracy: null,
-	// 					heading: null,
-	// 					latitude: coords['uw']['lat'],
-	// 					longitude: coords['uw']['long'],
-	// 					speed: null
-	// 				}
-	// 			})
-	// 		}, 1000)
-	// 	}
-	// });
-
     page.on('dialog', async dialog => {
         console.log(dialog.message());
         await dialog.accept();
     });
     page.on('console', consoleObj => console.log(consoleObj.text()));
-    
 
-    // await cdp.send("Network.enable");
-    // const setCookie = await cdp.send("Emulation.setGeolocationOverride", {
-    //     latitude: ,
-    //     longitude: ,
-    //     accuracy: 100
-    // });
-    
     console.log('Browser launched and page loaded');
     // https://stackoverflow.com/a/51250754nom
 
-    await page.goto(linkObj.link, {waitUntil: 'networkidle2'});
-    await utils.sleep(1000);
-    await page.evaluate(() => {
-        for (const a of document.querySelectorAll("a")) {
-            //console.log(a);
-            if (
-                a.textContent.includes("Use precise location") ||
-                a.textContent.includes("Enable Location")
-            ) {
-                console.log('clicking link')
-                a.click();
-                window.location.reload(false); 
-                break;
-            } else if (
-                a.id === 'ChangeLocationLink'
-            ) { 
-                console.log('Found bing change location link');
-                a.click();
-                setTimeout(() => {
-                    for (const input of document.querySelectorAll('input')) {
-                        console.log(input.value);
-                        if (input.value === 'Allow') {
-                            console.log('found allow');
-                            input.click();
-                            break;
-                        }
-                    }
-                }, 1000)
+    await page.goto(linkObj.link, {
+        waitUntil: 'networkidle2'
+    });
+    await context.overridePermissions(page.url(), ['geolocation']);
+    await utils.sleep(2000);
+
+    let linkHandlers;
+    if (linkObj.link.includes('google.com')) {
+        linkHandlers = await page.$x('//a[contains(text(), "Use precise location")]');
+    } else if (linkObj.link.includes('duckduckgo.com')) {
+        linkHandlers = await page.$x('//a[contains(text(), "Enable Location")]');
+    } else if (linkObj.link.includes('bing.com')) {
+        linkHandlers = await page.$x('//a[contains(text(), "Change")]');
+    }
+    if (linkHandlers.length > 0) {
+        await linkHandlers[0].click();
+        utils.sleep(1000);
+        if (linkObj.link.includes('google.com')) {
+            await page.reload({
+                waitUntil: ["networkidle0", "domcontentloaded"]
+            });
+        } else if (linkObj.link.includes('bing.com')) {
+            const inputHandlers = await page.$x('//input[contains(text(), "Accept")]');
+            if (inputHandlers.length > 0) {
+                intputHandlers[0].click();
+                console.log('clicked accept input');
             }
         }
-    });
-    await utils.sleep(10000);
+    } else {
+        console.log('no location link found');
+    }
+
+    console.log('sleeping...');
+    await utils.sleep(2000);
     await utils.scrollDown(page);
-    
+
     console.log('Loaded page, slept 1 sec, and scrolled down.');
-    
+
     const pngPath = `${curDir}/${niceDateStr}.png`
     console.log(pngPath);
     await page.screenshot({
         path: pngPath,
         fullPage: true
     });
-    
+
     let linkElements;
     try {
         linkElements = await page.$$eval('a', utils.getPos);
@@ -197,7 +173,11 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
 
     const mhtmlPath = `${curDir}/${niceDateStr}.mhtml`;
     const cdp = await page.target().createCDPSession();
-    const { data } = await cdp.send('Page.captureSnapshot', { format: 'mhtml' });
+    const {
+        data
+    } = await cdp.send('Page.captureSnapshot', {
+        format: 'mhtml'
+    });
     fs.writeFileSync(mhtmlPath, data);
 
     // === all done! == //
