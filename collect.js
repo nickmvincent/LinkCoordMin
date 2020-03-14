@@ -45,6 +45,7 @@ if (['google', 'bing', 'duckduckgo'].includes(platform)) {
         google: 'https://www.google.com/search?q=',
         bing: 'https://www.bing.com/search?q=',
         duckduckgo: 'https://www.duckduckgo.com/?q=',
+        yahoo: 'https://search.yahoo.com/search?p='
     } [platform]
 }
 const links = [];
@@ -79,13 +80,17 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
     mkdirp(curDir);
 
     const browser = await puppeteer.launch({
-        args: ['--no-sandbox'],
+        args: ['--no-sandbox', ],
         headless: false
     });
     const context = browser.defaultBrowserContext();
     context.clearPermissionOverrides();
     await context.overridePermissions(linkObj.link, ['geolocation']);
     const page = await context.newPage();
+    await page.setCacheEnabled(false);
+
+    const cdp = await page.target().createCDPSession();
+
     await page.emulate(device);
     await page.setGeolocation({
         latitude: coords['uw']['lat'],
@@ -97,14 +102,13 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
         console.log(dialog.message());
         await dialog.accept();
     });
-    page.on('console', consoleObj => console.log(consoleObj.text()));
 
     console.log('Browser launched and page loaded');
-    // https://stackoverflow.com/a/51250754nom
-
     await page.goto(linkObj.link, {
         waitUntil: 'networkidle2'
     });
+    // var cookies = await page.cookies();
+    // console.log(cookies);
     await context.overridePermissions(page.url(), ['geolocation']);
     await utils.sleep(2000);
 
@@ -172,7 +176,7 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
     fs.writeFile(jsonPath, json, 'utf8', () => console.log(`Wrote to ${jsonPath}`));
 
     const mhtmlPath = `${curDir}/${niceDateStr}.mhtml`;
-    const cdp = await page.target().createCDPSession();
+    
     const {
         data
     } = await cdp.send('Page.captureSnapshot', {
