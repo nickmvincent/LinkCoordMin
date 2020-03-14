@@ -13,3 +13,9 @@ def recurse_print_infinitedict(d, prefix=''):
     for k, v in d.items():
         print(prefix, k)
         recurse_print_infinitedict(v, prefix + ' ')
+
+def is_mobile(device_name):
+    """ is this device_name a mobile device"""
+    return device_name in [
+        'iPhone X', 'Galaxy S5',
+    ]

@@ -1,10 +1,44 @@
 
+#%% [markdown]
+# # Quick links
+# ## If you want to skip to a particular result in this notebook, search for the following terms
+# * "What search engines were considered?" / "What devices were considered?" / "What query categories were considered?"
+# * "What queries were made?"
+# * "What Wikipedia links appeared in SERPs?"
+# * "How many times does each Wikipedia link appear for each device and search engine?"
+# * "How often did Wikipedia links appear in SERPs?"
+# * "How often did Wikipedia links appear in certain locations of SERPs?" (e.g. above-the-fold, in the right-hand column, etc.
+# ## For the code that calculate incidence rates, see analyze_links.py
+
+# # Current data format
+# Currently, the node.js scraping code (see collect.js)
+# saves 3 result files per SERP scraped:
+# * a .json file with 
+# device object used by puppeteer ("device"), date collection started ("dateStr"),
+# date of collection ("dataAtSave"), user-specified query category (queryCat),
+# file queries came from ("queryFile"), device name ("deviceName"),
+# url accessed ("link"), the search engine or website ("platform"),
+# the query made ("target"), and finally, a huge array of link elements ("linkElements")
+# * a .png file that is a full screenshot of the SERP
+# * a .mhtml snapshot of the website that can be opened in a web browser (this is experimental, apparently)
+# 
+# Files are named by datetime of script start to avoid accidental overwrite.
+# See examples in "server_output"
+
+# This script (analysis.py) includes code which stitches together a visual representation of
+# links and their coordinates (obtained using getBoundingClientRect) alongside screenshots
+# so search can perform visual validation -- compare the link representation (easy to do quant analyses)
+# with the png representation and make sure they match up!
+
+
+
 #%%
 # defaults
 import json
 import glob
 from pprint import pprint
 from collections import defaultdict
+from urllib.parse import unquote
 
 # scipy
 import pandas as pd
@@ -17,123 +51,38 @@ import seaborn as sns
 from PIL import Image
 
 # helpers for this project
-from helpers import infinite_defaultdict, recurse_print_infinitedict, extract
+from helpers import (
+    infinite_defaultdict, recurse_print_infinitedict, extract
+    is_mobile,
+)
 from constants import CONSTANTS
 
 #%% [markdown]
-# The below function takes a dataframe of SERP / webpage links
-# and calculates the width, height, and normalized coordinates.
+# The heavy lifting of analysis is in "analyze_links.py"
+# `analyze_links_df` function takes a dataframe of links
+# and calculates the width, height, and normalized coordinates of each link element.
 # It extracts the domain from each link (using urlparse(link).netloc, see helpers.py).
 # Finally, it calculates a variety of incidence rates: how often are various
-# domain appearing in the full page, above-the-fold, in the right column, etc.
+# domains appearing in the full page, above-the-fold, in the right column, etc.
 # Above-the-fold, right-hand, etc. are calculated using the constants defined above
 # such as common viewport heights for desktop and mobile devices.
 
-# to keep variables / column names short, there's some short hand here
-# lh = left-hand
-# rh = right-hand
-# noscroll = above-the-fold
 #%%
-
-def prep_links_df(df, mobile=False):
-    """
-    TODO
-    see above markdown
-    """
-    df['width'] = df.right - df.left
-    df['height'] = df.bottom - df.top
-    right_max = df['right'].max()
-    bot_max = df['bottom'].max()
-
-    # normalize all x-axis values relative to rightmost point
-    for key in ['width', 'left', 'right']:
-        df['norm_{}'.format(key)] = df[key] / right_max
-
-    # normalize all y-axis values relative to bottommost point
-    for key in ['height', 'top', 'bottom']:
-        df['norm_{}'.format(key)] = df[key] / bot_max
-
-    # treat links to DDG twitter & reddit as internal
-    df.loc[df.href == 'https://twitter.com/duckduckgo', 'href'] = 'www.duckduckgo.com'
-    df.loc[df.href == 'https://reddit.com/r/duckduckgo', 'href'] = 'www.duckduckgo.com'
-
-    df['domain'] = df.apply(extract, axis=1)
-
-    # flag UGC domains of note (can add more if desired)
-    domains = [
-        'wikipedia',
-        'twitter', 'youtube',
-        'facebook', 'reddit',
-    ]
-
-    df['platform_ugc'] = df['domain'].str.contains('|'.join(
-        domains
-    ))
-    
-    for domain in domains:
-        df[f'{domain}_in'] = df['domain'].str.contains(domain)
-        df[f'{domain}_appears'] = (
-            df['domain'].str.contains(domain) &
-            (df.width != 0) & (df.height != 0)
-        )
-        kp_line = CONSTANTS['lefthand_width'] / right_max
-        if mobile:
-            # no left-hand or right-hand incidence
-            df[f'{domain}_appears_rh'] = 0
-            # no lefthand above-the-fold incidence
-            df[f'{domain}_appears_lh'] = 0
-            for name, line in CONSTANTS['mobile_lines'].items():
-                mobile_noscroll_line = line / bot_max
-
-                df[f'{domain}_appears_{name}'] = (
-                    (df[f'{domain}_appears']) &
-                    (df.norm_top < mobile_noscroll_line)
-                )
-
-                df[f'{domain}_appears_lh_{name}'] = 0
-
-        else:
-            df[f'{domain}_appears_rh'] = (
-                (df[f'{domain}_appears']) &
-                (df.norm_left > kp_line)
-            )
-
-            df[f'{domain}_appears_lh'] = (
-                (df[f'{domain}_appears']) &
-                (df.norm_left <= kp_line)
-            )
-
-            for name, line in CONSTANTS['desktop_lines'].items():
-                noscroll_line = line / bot_max
-
-                df[f'{domain}_appears_{name}'] = (
-                    (df[f'{domain}_appears']) &
-                    (df.norm_top < noscroll_line)
-                )
-
-                df[f'{domain}_appears_lh_{name}'] = (
-                    (df[f'{domain}_appears_lh']) &
-                    (df.norm_top < noscroll_line)
-                )
-    return df
-
+from analyze_links import analyze_links_df
 
 #%%
-# Experiment parameters (which experiments to load)
+# Which experiments should we load?
 device_names = [
     'Chrome on Windows',
     'iPhone X',
 ]
-def is_mobile(device_name):
-    """ is this device_name a mobile device"""
-    return device_name in [
-        'iPhone X', 'Galaxy S5',
-    ]
+
 
 search_engines = [
     'google',
     'bing',
     'duckduckgo',
+    # 'yahoo' not yet tested, but probably works decently well.
 ]
 query_sets = [
     #'top',
@@ -158,18 +107,32 @@ for device_name in device_names:
 
 #%%
 rows = []
-# where are the files
-outdir = 'server_output'
+outdir = 'server_output' # where are the files
 for file in glob.glob(f'{outdir}/**/*.json', recursive=True):
-    print(file)
     with open(file, 'r', encoding='utf8') as f:
         d = json.load(f)
     rows.append(d)
 full_df = pd.DataFrame(rows)
 full_df.head(3)
 
+#%% 
+# ## "What search engines were considered?" / "What devices were considered?" / "What query categories were considered?"
+print('Search engines and how many SERPs per search engine:')
+print(full_df.platform.value_counts(), '\n')
+print('Device names and how many SERPs per device:')
+print(full_df.deviceName.value_counts(), '\n')
+print('Query categories and how many SERPs per category:')
+print(full_df.queryCat.value_counts(), '\n')
+
+
 #%%
-# we will have one df for each combination of device_name / search_engine / query_cat
+# ## "What queries were made?"
+print('Queries made and how many SERPs per query:')
+print(full_df.target.value_counts().sort_index())
+
+#%%
+# we will have one dataframe full of links for each combination of device_name / search_engine / query_cat
+# in each df, each row corresponds to a single <a> link element
 dfs = infinite_defaultdict()
 # this three-key dict will be use the following sequence of keys: device_name, search_engine, query_cat
 
@@ -177,8 +140,6 @@ for config in configs:
     device_name = config['device_name']
     search_engine = config['search_engine']
     query_cat = config['query_cat']
-    print(device_name, search_engine, query_cat)
-
     sub = full_df[
         (full_df.deviceName == device_name) &
         (full_df.platform == search_engine) & 
@@ -189,37 +150,61 @@ for config in configs:
         linkElements = row.linkElements
         for x in linkElements:
             x['target'] = row.target
-        links_rows += row.linkElements
-
+            x['device_name'] = device_name
+            x['search_engine'] = search_engine
+            x['query_cat'] = query_cat
+        links_rows += linkElements
     links_df = pd.DataFrame(links_rows)
 
-    dfs[device_name][search_engine][query_cat] = prep_links_df(pd.DataFrame(links_df), is_mobile(device_name))
-
+    dfs[device_name][search_engine][query_cat] = analyze_links_df(
+        pd.DataFrame(links_df), is_mobile(device_name)
+    )
 
 #%% [markdown]
-# Let's see which links are most common
+# ## Let's see which links are most common
+    
 #%%
-# 
-for_concat_list = []
+concat_all_domains = []
 for config in configs:
     device_name = config['device_name']
     search_engine = config['search_engine']
     query_cat = config['query_cat']
-    for_concat_df = dfs[device_name][search_engine][query_cat][['domain']]
-    for_concat_list.append(for_concat_df)
-pd.concat(for_concat_list)['domain'].value_counts()[:15]
-
+    concat_all_domains.append(
+        dfs[device_name][search_engine][query_cat][['domain']]
+    )
+print('Top 20 domains in all SERPs collected:')
+pd.concat(concat_all_domains)['domain'].value_counts()[:20]
 
 #%% [markdown]
-# What are the Wikipedia links showing up on desktop?
+# ## What Wikipedia links appeared in SERPs?
 #%%
-tmp = dfs['Chrome on Windows']['bing']['covid19']
-list(
-    tmp[tmp.wikipedia_appears].href.apply(lambda x: x.replace('http://', '').replace('https://', '')).unique()
-)
+print('What are the Wikipedia links showing up on desktop?')
+concat_wp_links = []
+for config in configs:
+    device_name = config['device_name']
+    search_engine = config['search_engine']
+    query_cat = config['query_cat']
+    tmp = dfs[device_name][search_engine][query_cat]
+    tmp = tmp[tmp.wikipedia_appears]
+    tmp['norm_href'] = tmp.href.apply(
+        lambda x: unquote(x.replace('http://', '').replace('https://', '').replace('.m.', '.'))
+    )
+    concat_wp_links.append(
+        tmp
+    )
+concatted_wp_links = pd.concat(concat_wp_links)
+concatted_wp_links['norm_href'].value_counts()
 
 #%%
-# to concat images:
+concatted_wp_links
+#%%
+# How many times does each Wikipedia link appear for each device and search engine?
+print('How many times does each Wikipedia link appear for each device and search engine?')
+pd.crosstab(concatted_wp_links.norm_href, [concatted_wp_links.device_name, concatted_wp_links.search_engine])
+
+
+#%%
+# to stitch together image files:
 # source: https://stackoverflow.com/questions/30227466/combine-several-images-horizontally-with-python
 
 #%% [markdown]
@@ -239,7 +224,6 @@ if DO_COORDS:
         search_engine = config['search_engine']
         query_cat = config['query_cat']
 
-        print(device_name, search_engine, query_cat)
         df = dfs[device_name][search_engine][query_cat]
         if type(df) == defaultdict:
             continue
@@ -312,7 +296,7 @@ if DO_COORDS:
                 plt.savefig(f'reports/{k}_{target}.png')
             plt.close()
             if target in chosen_ones:
-                screenshot_path = f'{outdir}/{device}/{search_engine}/{query_cat}/results.json_{target}.png'
+                screenshot_path = f'{outdir}/{device_name}/{search_engine}/{query_cat}/results.json_{target}.png'
                 # the overlay will be smaller
                 #TODO
                 try:
@@ -341,7 +325,7 @@ if DO_COORDS:
 
 #%%
 # toss results in here for easy dataframe creation
-row_dicts = []
+row_dicts = [] # each row is one config: device_name / search_engine / query_cat (/geography?)
 for config in configs:
     device_name = config['device_name']
     search_engine = config['search_engine']
@@ -356,7 +340,7 @@ for config in configs:
     rh_inc_rate = df.groupby('target').wikipedia_appears_rh.agg(any).mean()
     lh_inc_rate = df.groupby('target').wikipedia_appears_lh.agg(any).mean()
 
-    if device_name in ['iPhone X', 'Galaxy S5']:
+    if is_mobile(devince_name):
         d = CONSTANTS['mobile_lines']
     else:
         d = CONSTANTS['desktop_lines']
@@ -384,7 +368,7 @@ for config in configs:
     row_dicts.append(row_dict)
 #%%
 results_df = pd.DataFrame(row_dicts)
-results_df
+results_df.head(3)
 
 # %%
 FP = 'Full-page incidence'
@@ -444,6 +428,7 @@ renamed.replace(to_replace={
     'top': 'common',
     'med': 'medical',
     'trend': 'trending',
+    'covid19': 'COVID-19'
 }, inplace=True)
 renamed
 
@@ -467,7 +452,7 @@ renamed[
 ]].to_csv('reports/mobile.csv', float_format="%.2f", index=False)
 
 #%%
-renamed
+renamed.head(3)
 
 #%%
 baseline_df = results_df[['device_name', 'search_engine', 'query_cat', 'twitter_inc_rate', 'youtube_inc_rate', 'facebook_inc_rate']]
@@ -482,8 +467,9 @@ melted = renamed.melt(id_vars=['Device', 'Search Engine', 'Query Category'])
 #%%
 melted
 
+#%% [markdown]
+# ## How often did Wikipedia links appear in SERPs?
 #%%
-
 melted.rename(columns={
     'variable': 'y-axis',
     'value': 'Incidence rate',
@@ -502,6 +488,9 @@ g = sns.catplot(
 )
 plt.savefig('reports/FP_catplot.png', dpi=300)
 
+
+#%% [markdown]
+# ## How often did Wikipedia links appear in certain locations of SERPs?
 #%%
 # lh vs rh
 g = sns.catplot(
