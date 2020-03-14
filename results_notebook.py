@@ -162,7 +162,7 @@ for config in configs:
 
 #%% [markdown]
 # ## Let's see which links are most common
-    
+
 #%%
 concat_all_domains = []
 for config in configs:

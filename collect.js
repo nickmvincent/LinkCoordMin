@@ -30,6 +30,9 @@ if (myArgs[0] == 'allDevices') {
 const platform = myArgs[1];
 const queryCat = myArgs[2];
 const queryFile = myArgs[3];
+const geoName = myArgs[4];
+// current simple options: hancock, sf, uw
+
 
 const target_file = `search_queries/prepped/${queryCat}/${queryFile}.txt`;
 const text = fs.readFileSync(target_file, "utf-8");
@@ -71,8 +74,7 @@ const coords = {
         long: -122.303200
     }
 }
-
-const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
+const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) => {
     const niceLink = linkObj.link.replace(/\//g, "-").replace(/:/g, '-'); // (nice for Windows filesystem)
     const niceDateStr = dateStr.replace(/:/g, '-'); // (nice for Windows filesystem)
 
@@ -81,7 +83,7 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
 
     const browser = await puppeteer.launch({
         args: ['--no-sandbox', ],
-        headless: false
+        headless: true
     });
     const context = browser.defaultBrowserContext();
     context.clearPermissionOverrides();
@@ -92,11 +94,14 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
     const cdp = await page.target().createCDPSession();
 
     await page.emulate(device);
-    await page.setGeolocation({
-        latitude: coords['uw']['lat'],
-        longitude: coords['uw']['long'],
-        //accuracy: 100,
-    });
+    if (geoName !== 'None') {
+        await page.setGeolocation({
+            latitude: coords[geoName]['lat'],
+            longitude: coords[geoName]['long'],
+            //accuracy: 100,
+        });
+    } 
+    
 
     page.on('dialog', async dialog => {
         console.log(dialog.message());
@@ -113,21 +118,21 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
     await utils.sleep(2000);
 
     let linkHandlers;
-    if (linkObj.link.includes('google.com')) {
+    if (platform === 'google') {
         linkHandlers = await page.$x('//a[contains(text(), "Use precise location")]');
-    } else if (linkObj.link.includes('duckduckgo.com')) {
+    } else if (platform === 'duckduckgo') {
         linkHandlers = await page.$x('//a[contains(text(), "Enable Location")]');
-    } else if (linkObj.link.includes('bing.com')) {
+    } else if (platform === 'bing') {
         linkHandlers = await page.$x('//a[contains(text(), "Change")]');
     }
     if (linkHandlers.length > 0) {
         await linkHandlers[0].click();
         utils.sleep(1000);
-        if (linkObj.link.includes('google.com')) {
+        if (platform === 'google') {
             await page.reload({
                 waitUntil: ["networkidle0", "domcontentloaded"]
             });
-        } else if (linkObj.link.includes('bing.com')) {
+        } else if (platform === 'bing') {
             const inputHandlers = await page.$x('//input[contains(text(), "Accept")]');
             if (inputHandlers.length > 0) {
                 intputHandlers[0].click();
@@ -139,7 +144,7 @@ const scrape = async (linkObj, device, dateStr, queryCat, queryFile) => {
     }
 
     console.log('sleeping...');
-    await utils.sleep(2000);
+    await utils.sleep(3000);
     await utils.scrollDown(page);
 
     console.log('Loaded page, slept 1 sec, and scrolled down.');
@@ -196,7 +201,7 @@ const results = {};
     for await (const device of devicesSelected) {
         results[device.name] = {};
         for await (const link of links) {
-            await scrape(link, device, dateStr, queryCat, queryFile);
+            await scrape(link, device, platform, queryCat, dateStr, queryFile);
             //results[device.name][link] = {};
             //results[ret.device.name][ret.link][ret.dateStr] = ret.links;
             const sleepSecs = utils.randomIntFromInterval(sleepRange[0], sleepRange[1]);
