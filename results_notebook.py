@@ -8,8 +8,12 @@
 # * "How many times does each Wikipedia link appear for each device and search engine?"
 # * "How often did Wikipedia links appear in SERPs?"
 # * "How often did Wikipedia links appear in certain locations of SERPs?" (e.g. above-the-fold, in the right-hand column, etc.
-# ## For the code that calculate incidence rates, see analyze_links.py
+# 
+# For the code that calculate incidence rates, see analyze_links.py
 
+
+
+#%% [markdown]
 # # Current data format
 # Currently, the node.js scraping code (see collect.js)
 # saves 3 result files per SERP scraped:
@@ -23,12 +27,16 @@
 # * a .mhtml snapshot of the website that can be opened in a web browser (this is experimental, apparently)
 # 
 # Files are named by datetime of script start to avoid accidental overwrite.
-# See examples in "server_output"
-
+# 
 # This script (analysis.py) includes code which stitches together a visual representation of
 # links and their coordinates (obtained using getBoundingClientRect) alongside screenshots
 # so search can perform visual validation -- compare the link representation (easy to do quant analyses)
 # with the png representation and make sure they match up!
+
+#%% [markdown]
+# # Looking at the data
+# ## For a very quick glance, look at all the files in `quick_examples`
+# ## Alternatively, can look through the entire `server_output` folder
 
 
 
@@ -39,6 +47,7 @@ import glob
 from pprint import pprint
 from collections import defaultdict
 from urllib.parse import unquote
+import os
 
 # scipy
 import pandas as pd
@@ -52,7 +61,7 @@ from PIL import Image
 
 # helpers for this project
 from helpers import (
-    infinite_defaultdict, recurse_print_infinitedict, extract
+    infinite_defaultdict, recurse_print_infinitedict, extract,
     is_mobile,
 )
 from constants import CONSTANTS
@@ -85,10 +94,10 @@ search_engines = [
     # 'yahoo' not yet tested, but probably works decently well.
 ]
 query_sets = [
-    #'top',
-    #'med',
-    #'trend',
-    'covid19',
+    'top',
+    'med',
+    'trend',
+    #'covid19',
 ]
 configs = []
 for device_name in device_names:
@@ -107,10 +116,11 @@ for device_name in device_names:
 
 #%%
 rows = []
-outdir = 'server_output' # where are the files
+outdir = 'repli_output' # where are the files
 for file in glob.glob(f'{outdir}/**/*.json', recursive=True):
     with open(file, 'r', encoding='utf8') as f:
         d = json.load(f)
+    d['fileName'] = file
     rows.append(d)
 full_df = pd.DataFrame(rows)
 full_df.head(3)
@@ -135,7 +145,7 @@ print(full_df.target.value_counts().sort_index())
 # in each df, each row corresponds to a single <a> link element
 dfs = infinite_defaultdict()
 # this three-key dict will be use the following sequence of keys: device_name, search_engine, query_cat
-
+errs = []
 for config in configs:
     device_name = config['device_name']
     search_engine = config['search_engine']
@@ -146,19 +156,40 @@ for config in configs:
         (full_df.queryCat == query_cat) 
     ]
     links_rows = []
+    print(device_name, search_engine, query_cat)
     for i, row in sub.iterrows():
         linkElements = row.linkElements
-        for x in linkElements:
-            x['target'] = row.target
-            x['device_name'] = device_name
-            x['search_engine'] = search_engine
-            x['query_cat'] = query_cat
-        links_rows += linkElements
+        #print(row)
+        try:
+            for x in linkElements:
+                x['target'] = row.target
+                x['device_name'] = device_name
+                x['search_engine'] = search_engine
+                x['query_cat'] = query_cat
+                x['file_name'] = row.fileName
+            links_rows += linkElements
+        except TypeError: # (linkElements is NaN, and therefore a float)
+            print('error')
+            errs.append(row)
+        
     links_df = pd.DataFrame(links_rows)
 
     dfs[device_name][search_engine][query_cat] = analyze_links_df(
         pd.DataFrame(links_df), is_mobile(device_name)
     )
+
+#%%
+errs
+
+#%%
+for config in configs:
+    device_name = config['device_name']
+    search_engine = config['search_engine']
+    query_cat = config['query_cat']
+    tmp = dfs[device_name][search_engine][query_cat]
+    print(device_name, search_engine, query_cat)
+    print(tmp[tmp.error])
+
 
 #%% [markdown]
 # ## Let's see which links are most common
@@ -196,8 +227,6 @@ concatted_wp_links = pd.concat(concat_wp_links)
 concatted_wp_links['norm_href'].value_counts()
 
 #%%
-concatted_wp_links
-#%%
 # How many times does each Wikipedia link appear for each device and search engine?
 print('How many times does each Wikipedia link appear for each device and search engine?')
 pd.crosstab(concatted_wp_links.norm_href, [concatted_wp_links.device_name, concatted_wp_links.search_engine])
@@ -231,13 +260,14 @@ if DO_COORDS:
         bot_max = df['bottom'].max()
         ratio = bot_max / right_max
         k = f'{device_name}_{search_engine}_{query_cat}'
+        print(k)
 
         available_targets = list(full_df[
             (full_df.deviceName == device_name) & (full_df.platform == search_engine) & (full_df.queryCat == query_cat)
         ].target)
 
         np.random.seed(0)
-        chosen_ones = np.random.choice(available_targets, 1, replace=False)
+        chosen_ones = np.random.choice(available_targets, 5, replace=False)
         with open(f'reports/samples/{k}.txt', 'w', encoding='utf8') as f:
             f.write('\n'.join(chosen_ones))
         for target in available_targets + [None]:
@@ -245,6 +275,9 @@ if DO_COORDS:
                 subdf = df[df['target'] == target]
             else:
                 subdf = df
+            file_name = subdf.file_name.iloc[0]
+            if target:
+                assert len(set(subdf.file_name)) == 1
             fig, ax = plt.subplots(1, 1, figsize=(CONSTANTS['figure_width'], CONSTANTS['figure_width'] * ratio))
             plt.gca().invert_yaxis()
             add_last = []
@@ -291,18 +324,19 @@ if DO_COORDS:
             # show the page-fold
             plt.axhline(scroll_line, color='k', linestyle='-')
 
-            plt.savefig(f'reports/overlays/{k}_{target}.png')
-            if target == 'nba':
-                plt.savefig(f'reports/{k}_{target}.png')
+            overlay_file_name = f'{file_name}_overlay.png'
+            plt.savefig(overlay_file_name)
+            #plt.savefig(f'reports/overlays/{k}_{target}_{file_name}.png')
+
             plt.close()
             if target in chosen_ones:
-                screenshot_path = f'{outdir}/{device_name}/{search_engine}/{query_cat}/results.json_{target}.png'
+                screenshot_path = file_name.replace('.json', '.png')
                 # the overlay will be smaller
                 #TODO
                 try:
                     screenshot_img = Image.open(screenshot_path)
                     big_w, big_h = screenshot_img.size
-                    overlay_img = Image.open(f'reports/overlays/{k}_{target}.png')
+                    overlay_img = Image.open(overlay_file_name)
                     small_w, small_h = overlay_img.size
                 except FileNotFoundError: 
                     continue
@@ -319,8 +353,7 @@ if DO_COORDS:
                 for im in (screenshot_img, resized_overlay):
                     new_im.paste(im, (x_offset,0))
                     x_offset += im.size[0]
-
-                new_im.save(f'reports/samples/concat_{k}_{query_cat}.png')
+                new_im.save(f'reports/samples/concat_{k}_{target}.png')
 
 
 #%%
@@ -340,7 +373,7 @@ for config in configs:
     rh_inc_rate = df.groupby('target').wikipedia_appears_rh.agg(any).mean()
     lh_inc_rate = df.groupby('target').wikipedia_appears_lh.agg(any).mean()
 
-    if is_mobile(devince_name):
+    if is_mobile(device_name):
         d = CONSTANTS['mobile_lines']
     else:
         d = CONSTANTS['desktop_lines']
@@ -369,6 +402,16 @@ for config in configs:
 #%%
 results_df = pd.DataFrame(row_dicts)
 results_df.head(3)
+
+#%% [markdown]
+# ## How often did Wikipedia links appear in SERPs? (tabular)
+
+#%%
+
+results_df[
+    ['device_name', 'search_engine', 'inc_rate', 'matches']
+]
+
 
 # %%
 FP = 'Full-page incidence'
@@ -465,10 +508,10 @@ baseline_df.to_csv('reports/other_domains.csv', float_format="%.2f", index=False
 #%%
 melted = renamed.melt(id_vars=['Device', 'Search Engine', 'Query Category'])
 #%%
-melted
+melted.head(3)
 
 #%% [markdown]
-# ## How often did Wikipedia links appear in SERPs?
+# ## How often did Wikipedia links appear in SERPs? (visual)
 #%%
 melted.rename(columns={
     'variable': 'y-axis',
@@ -479,8 +522,7 @@ g = sns.catplot(
     x="Query Category", y='Incidence rate',
     hue="Search Engine", col="Device", row='y-axis',
     palette=['g', 'b', 'y'],
-    #order=['common', 'trending', 'medical'],
-    order=['covid19'],
+    #order=['COVID-19'],
     #row_order=[FP, AF, RH],
     data=melted[melted['y-axis'] == FP], kind="bar",
     height=3, aspect=1.5, ci=None,
