@@ -13,8 +13,10 @@
 * Desktop location spoofing is very inconsistent! Sometimes works when running repeat sessions (headless or non headless) but not in a replicable manner.
 * I can't even get location to work for desktop SERPs using the console. The "Accept" button throws an error!
 * Note: one thing that works using dev console is to (1) make a query that triggers maps, (2) change location by entering a place name, then (3) make a new query.
+* this works programmatically as well!
 ### Mobile
 * Mobile results seem to work, but when emulating location (through clicking the "Change" button), the full page of results don't load!
+* ^ fixed by
 * If the SERP doesn't have a "Change" button (because Bing thinks it isn't a "local" query?), this doesn't work at all.
 
 
