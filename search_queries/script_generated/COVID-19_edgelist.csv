@@ -1,0 +1,15 @@
+,root,edge,source,target,rank,depth,search_engine,datetime
+0,COVID-19,"('COVID-19', 'covid-19 tanker')",COVID-19,covid-19 tanker,1,0,google,2020-03-17 06:13:51.002243
+1,COVID-19,"('COVID-19', 'covid-19 live updates')",COVID-19,covid-19 live updates,2,0,google,2020-03-17 06:13:51.002243
+2,COVID-19,"('COVID-19', 'covid-19 wikipedia')",COVID-19,covid-19 wikipedia,3,0,google,2020-03-17 06:13:51.002243
+3,COVID-19,"('COVID-19', 'covid-19 rail car tanker')",COVID-19,covid-19 rail car tanker,4,0,google,2020-03-17 06:13:51.002243
+4,COVID-19,"('COVID-19', 'covid-19 stimulus package')",COVID-19,covid-19 stimulus package,5,0,google,2020-03-17 06:13:51.002243
+5,COVID-19,"('COVID-19', 'covid-19 symptoms')",COVID-19,covid-19 symptoms,6,0,google,2020-03-17 06:13:51.002243
+6,COVID-19,"('COVID-19', 'covid-19 map')",COVID-19,covid-19 map,7,0,google,2020-03-17 06:13:51.002243
+7,COVID-19,"('COVID-19', 'covid-19 stand for')",COVID-19,covid-19 stand for,8,0,google,2020-03-17 06:13:51.002243
+8,COVID-19,"('COVID-19', 'covid-19 in toilet paper')",COVID-19,covid-19 in toilet paper,9,0,google,2020-03-17 06:13:51.002243
+9,COVID-19,"('COVID-19', 'covid-19 vaccine')",COVID-19,covid-19 vaccine,10,0,google,2020-03-17 06:13:51.002243
+10,COVID-19,"('covid-19 live updates', 'covid-19 live updates cna')",covid-19 live updates,covid-19 live updates cna,1,1,google,2020-03-17 06:13:53.837458
+11,COVID-19,"('covid-19 stimulus package', 'covid-19 stimulus package malaysia')",covid-19 stimulus package,covid-19 stimulus package malaysia,1,1,google,2020-03-17 06:13:57.414321
+12,COVID-19,"('covid-19 stimulus package', 'covid 19 economic stimulus package')",covid-19 stimulus package,covid 19 economic stimulus package,2,1,google,2020-03-17 06:13:57.414321
+13,COVID-19,"('covid 19 economic stimulus package', 'covid 19 economic stimulus package australia')",covid 19 economic stimulus package,covid 19 economic stimulus package australia,1,2,google,2020-03-17 06:14:06.754455

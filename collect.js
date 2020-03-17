@@ -10,11 +10,9 @@ const utils = require('./utils');
 // default mobile devices and custom "desktop devices"
 const emulatedDevices = require('./emulatedDevices');
 
-
 const outDir = 'output';
 const sleepRange = [30, 60];
 let curDir = '';
-
 
 const myArgs = process.argv.slice(2);
 let devicesSelected = [];
@@ -64,6 +62,7 @@ const coords = {
     hancock: {
         lat: 41.8988,
         long: -87.6229,
+        zip: 60611,
     },
     sf: {
         lat: 37.7749,
@@ -71,7 +70,8 @@ const coords = {
     },
     uw: {
         lat: 47.655548,
-        long: -122.303200
+        long: -122.303200,
+        zip: '98195',
     }
 }
 const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) => {
@@ -83,7 +83,7 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
 
     const browser = await puppeteer.launch({
         args: ['--no-sandbox', ],
-        headless: true
+        headless: false
     });
     const context = browser.defaultBrowserContext();
     context.clearPermissionOverrides();
@@ -127,17 +127,34 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
     }
     if (linkHandlers.length > 0) {
         await linkHandlers[0].click();
-        utils.sleep(1000);
+        await page.waitFor(1000);
         if (platform === 'google') {
             await page.reload({
                 waitUntil: ["networkidle0", "domcontentloaded"]
             });
-        } else if (platform === 'bing') {
-            const inputHandlers = await page.$x('//input[contains(text(), "Accept")]');
-            if (inputHandlers.length > 0) {
-                intputHandlers[0].click();
-                console.log('clicked accept input');
-            }
+        } else if (platform === 'bing' && !device.isMobile) {
+            await page.waitForSelector('input[name=geoname]');
+            await page.type('input[name=geoname]', coords[geoName]['zip'], {delay: 50});
+            await page.waitFor(1000);
+
+            const sel = 'input[id=chlocman_sbChangeLocationLink]'
+            //await page.waitForSelector(sel);
+            await page.click(sel);
+            console.log('clicked...')
+            //await page.waitForNavigation();
+            // const inputHandlers = await page.$x('//input[contains(text(), "Accept")]');
+            // if (inputHandlers.length > 0) {
+            //     intputHandlers[0].click();
+            //     console.log('clicked accept input');
+            // }
+            
+
+            // The below works only for mobile.
+            // const inputHandlers = await page.$x('//input[contains(text(), "Accept")]');
+            // if (inputHandlers.length > 0) {
+            //     intputHandlers[0].click();
+            //     console.log('clicked accept input');
+            // }
         }
     } else {
         console.log('no location link found');

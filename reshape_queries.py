@@ -23,7 +23,7 @@ def write_batches(s, name, save_folder):
     os.makedirs(f'{save_folder}/{name}', exist_ok=True)
     s = pd.Series(s.str.strip().unique())
     for i, chunk in enumerate(batch(s, 25)):
-        name_i = f'{name}_{i}.txt'
+        name_i = f'{i}.txt'
         chunk.str.strip().to_csv(f'{save_folder}/{name}/{name_i}', index=False, header=False)
 
 

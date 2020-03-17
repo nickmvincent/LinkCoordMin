@@ -1,0 +1,51 @@
+query,value,formattedValue,hasData,link
+covid-19 coronavirus,100,100,True,/trends/explore?q=covid-19+coronavirus&date=2004-01-1+2020-03-17
+coronavirus,95,95,True,/trends/explore?q=coronavirus&date=2004-01-1+2020-03-17
+covid,41,41,True,/trends/explore?q=covid&date=2004-01-1+2020-03-17
+covid-19 cases,34,34,True,/trends/explore?q=covid-19+cases&date=2004-01-1+2020-03-17
+virus covid-19,29,29,True,/trends/explore?q=virus+covid-19&date=2004-01-1+2020-03-17
+covid 19,28,28,True,/trends/explore?q=covid+19&date=2004-01-1+2020-03-17
+corona,28,28,True,/trends/explore?q=corona&date=2004-01-1+2020-03-17
+covid-19 map,20,20,True,/trends/explore?q=covid-19+map&date=2004-01-1+2020-03-17
+covid-19 symptoms,19,19,True,/trends/explore?q=covid-19+symptoms&date=2004-01-1+2020-03-17
+corona virus,14,14,True,/trends/explore?q=corona+virus&date=2004-01-1+2020-03-17
+covid-19 who,14,14,True,/trends/explore?q=covid-19+who&date=2004-01-1+2020-03-17
+who,14,14,True,/trends/explore?q=who&date=2004-01-1+2020-03-17
+news covid-19,14,14,True,/trends/explore?q=news+covid-19&date=2004-01-1+2020-03-17
+covid-19 updates,13,13,True,/trends/explore?q=covid-19+updates&date=2004-01-1+2020-03-17
+covid-19 update,12,12,True,/trends/explore?q=covid-19+update&date=2004-01-1+2020-03-17
+covid-19 us,11,11,True,/trends/explore?q=covid-19+us&date=2004-01-1+2020-03-17
+cdc covid-19,11,11,True,/trends/explore?q=cdc+covid-19&date=2004-01-1+2020-03-17
+cdc,11,11,True,/trends/explore?q=cdc&date=2004-01-1+2020-03-17
+what is covid-19,10,10,True,/trends/explore?q=what+is+covid-19&date=2004-01-1+2020-03-17
+china covid-19,9,9,True,/trends/explore?q=china+covid-19&date=2004-01-1+2020-03-17
+italy,9,9,True,/trends/explore?q=italy&date=2004-01-1+2020-03-17
+italy covid-19,8,8,True,/trends/explore?q=italy+covid-19&date=2004-01-1+2020-03-17
+covid-19 test,8,8,True,/trends/explore?q=covid-19+test&date=2004-01-1+2020-03-17
+covid-19 usa,8,8,True,/trends/explore?q=covid-19+usa&date=2004-01-1+2020-03-17
+covid-19 canada,8,8,True,/trends/explore?q=covid-19+canada&date=2004-01-1+2020-03-17
+covid-19 coronavirus,1710350,Breakout,,/trends/explore?q=covid-19+coronavirus&date=2004-01-1+2020-03-17
+coronavirus,1619050,Breakout,,/trends/explore?q=coronavirus&date=2004-01-1+2020-03-17
+covid,697000,Breakout,,/trends/explore?q=covid&date=2004-01-1+2020-03-17
+covid-19 cases,589950,Breakout,,/trends/explore?q=covid-19+cases&date=2004-01-1+2020-03-17
+virus covid-19,498950,Breakout,,/trends/explore?q=virus+covid-19&date=2004-01-1+2020-03-17
+covid 19,480750,Breakout,,/trends/explore?q=covid+19&date=2004-01-1+2020-03-17
+corona,471950,Breakout,,/trends/explore?q=corona&date=2004-01-1+2020-03-17
+covid-19 map,341850,Breakout,,/trends/explore?q=covid-19+map&date=2004-01-1+2020-03-17
+covid-19 symptoms,328800,Breakout,,/trends/explore?q=covid-19+symptoms&date=2004-01-1+2020-03-17
+corona virus,246450,Breakout,,/trends/explore?q=corona+virus&date=2004-01-1+2020-03-17
+covid-19 who,238050,Breakout,,/trends/explore?q=covid-19+who&date=2004-01-1+2020-03-17
+who,237800,Breakout,,/trends/explore?q=who&date=2004-01-1+2020-03-17
+news covid-19,232900,Breakout,,/trends/explore?q=news+covid-19&date=2004-01-1+2020-03-17
+covid-19 updates,228700,Breakout,,/trends/explore?q=covid-19+updates&date=2004-01-1+2020-03-17
+covid-19 update,207650,Breakout,,/trends/explore?q=covid-19+update&date=2004-01-1+2020-03-17
+covid-19 us,192850,Breakout,,/trends/explore?q=covid-19+us&date=2004-01-1+2020-03-17
+cdc covid-19,185400,Breakout,,/trends/explore?q=cdc+covid-19&date=2004-01-1+2020-03-17
+cdc,183950,Breakout,,/trends/explore?q=cdc&date=2004-01-1+2020-03-17
+what is covid-19,168850,Breakout,,/trends/explore?q=what+is+covid-19&date=2004-01-1+2020-03-17
+china covid-19,149050,Breakout,,/trends/explore?q=china+covid-19&date=2004-01-1+2020-03-17
+italy,146250,Breakout,,/trends/explore?q=italy&date=2004-01-1+2020-03-17
+italy covid-19,144200,Breakout,,/trends/explore?q=italy+covid-19&date=2004-01-1+2020-03-17
+covid-19 test,137550,Breakout,,/trends/explore?q=covid-19+test&date=2004-01-1+2020-03-17
+covid-19 usa,134100,Breakout,,/trends/explore?q=covid-19+usa&date=2004-01-1+2020-03-17
+covid-19 canada,131000,Breakout,,/trends/explore?q=covid-19+canada&date=2004-01-1+2020-03-17
