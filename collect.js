@@ -83,7 +83,7 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
 
     const browser = await puppeteer.launch({
         args: ['--no-sandbox', ],
-        headless: false
+        headless: true
     });
     const context = browser.defaultBrowserContext();
     context.clearPermissionOverrides();

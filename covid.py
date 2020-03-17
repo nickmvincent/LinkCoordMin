@@ -28,7 +28,6 @@ configs = []
 
 for device in devices:
     for cat in cats:
-        for 
         for loc in locs:
             configs.append({
                 'device': device,
