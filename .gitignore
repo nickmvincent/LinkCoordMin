@@ -5,6 +5,7 @@ server_output/
 repli_output/
 reports/
 quick_examples/
+search_queries/
 
 .DS_Store
 *.cpython-36.pyc
