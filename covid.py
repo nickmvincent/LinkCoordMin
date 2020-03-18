@@ -41,8 +41,8 @@ for config in configs:
         device = config['device']
         cat = config['cat']
         # todo other indices
-        cmd = f"node collect.js {device} {search_engine} '{cat}' 0 {loc}"
+        cmd = f"node collect.js {device} {search_engine} '{cat}' 0 {loc} covidout"
         cmds.append(cmd)
-    concat = ' & '.join(cmds)
+    concat = ' & '.join(cmds) + ' & wait'
     print(concat)
     os.system(concat)

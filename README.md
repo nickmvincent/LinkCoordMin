@@ -23,8 +23,12 @@ To run script that
 3) makes "medical queries"
 4) from the `search_queries/prepped/med/med_sample3.txt` file
 5) from the `uw` location (university of washington lat / long /zip)
+6) to dir `out`
 
-`node collect.js iphonex google med med_sample3 uw`
+`node collect.js iphonex google med med_sample3 uw output`
+
+To run google and bing at the same time (using & for parallel)
+`node collect.js iphonex google local local_0 uw localout & node collect.js iphonex bing local local_0 uw localout & wait`
 
 
 ## Misc
