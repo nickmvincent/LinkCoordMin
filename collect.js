@@ -10,7 +10,7 @@ const utils = require('./utils');
 // default mobile devices and custom "desktop devices"
 const emulatedDevices = require('./emulatedDevices');
 
-const sleepRange = [30, 60];
+const sleepRange = [15, 30];
 let curDir = '';
 
 const myArgs = process.argv.slice(2);

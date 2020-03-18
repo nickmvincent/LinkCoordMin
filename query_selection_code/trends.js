@@ -46,7 +46,7 @@ const queryCats = [];
         });
 
 
-    await googleTrends.relatedQueries({
+    /*await googleTrends.relatedQueries({
             keyword: 'COVID-19'
         })
         .then((results) => {
@@ -60,8 +60,8 @@ const queryCats = [];
         })
         .catch((err) => {
             console.log(err);
-        })
+        })*/
 
-    const jsonPath = `metadata/query_cats/${niceDateStr}.json`
+    const jsonPath = `search_queries/script_generated/${niceDateStr}_metadata.json`
     fs.writeFile(jsonPath, JSON.stringify(queryCats), 'utf8', () => console.log(`Wrote to ${jsonPath}`));
 })();

@@ -6,6 +6,7 @@ repli_output/
 reports/
 quick_examples/
 search_queries/
+covidout/
 
 .DS_Store
 *.cpython-36.pyc

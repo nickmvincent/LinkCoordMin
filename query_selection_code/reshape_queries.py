@@ -2,13 +2,13 @@
 import pandas as pd
 import numpy as np
 import os
-load_folder = 'search_queries'
-save_folder = 'search_queries/prepped'
+load_folder = 'query_selection_code'
+save_folder = '../search_queries/prepped'
 n = 3
 write_samples = True
 
 #%%
-from search_queries.georgetown_medical_bing import MED_QUERIES
+from georgetown_medical_bing import MED_QUERIES
 med_df = pd.DataFrame(MED_QUERIES)
 med_df
 
@@ -73,3 +73,6 @@ if write_samples:
 
 
 # %%
+
+if __name__ == '__main__':
+    pass

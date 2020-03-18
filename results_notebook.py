@@ -39,7 +39,6 @@
 # ## Alternatively, can look through the entire `server_output` folder
 
 
-
 #%%
 # defaults
 import json
@@ -66,6 +65,9 @@ from helpers import (
 )
 from constants import CONSTANTS
 
+DO_COORDS = False
+SAVE_PLOTS = False
+
 #%% [markdown]
 # The heavy lifting of analysis is in "analyze_links.py"
 # `analyze_links_df` function takes a dataframe of links
@@ -83,14 +85,14 @@ from analyze_links import analyze_links_df
 # Which experiments should we load?
 device_names = [
     'Chrome on Windows',
-    'iPhone X',
+    #'iPhone X',
 ]
 
 
 search_engines = [
     'google',
     'bing',
-    'duckduckgo',
+    #'duckduckgo',
     # 'yahoo' not yet tested, but probably works decently well.
 ]
 query_sets = [
@@ -99,15 +101,7 @@ query_sets = [
     'trend',
     #'covid19',
 ]
-configs = []
-for device_name in device_names:
-    for search_engine in search_engines:
-        for query_cat in query_sets:
-            configs.append({
-                'device_name': device_name,
-                'search_engine': search_engine,
-                'query_cat': query_cat,
-            })
+query_sets = 'all'
     
 
 #%% [markdown]
@@ -116,7 +110,7 @@ for device_name in device_names:
 
 #%%
 rows = []
-outdir = 'repli_output' # where are the files
+outdir = 'output/covidout' # where are the files
 for file in glob.glob(f'{outdir}/**/*.json', recursive=True):
     with open(file, 'r', encoding='utf8') as f:
         d = json.load(f)
@@ -133,6 +127,24 @@ print('Device names and how many SERPs per device:')
 print(full_df.deviceName.value_counts(), '\n')
 print('Query categories and how many SERPs per category:')
 print(full_df.queryCat.value_counts(), '\n')
+if query_sets == 'all':
+    query_sets = list(full_df.queryCat.unique())
+
+#%%
+# Which SERPs are missing for each search engines?
+pd.crosstab(full_df.platform, full_df.target)
+
+
+#%%
+configs = []
+for device_name in device_names:
+    for search_engine in search_engines:
+        for query_cat in query_sets:
+            configs.append({
+                'device_name': device_name,
+                'search_engine': search_engine,
+                'query_cat': query_cat,
+            })
 
 
 #%%
@@ -167,6 +179,7 @@ for config in configs:
                 x['search_engine'] = search_engine
                 x['query_cat'] = query_cat
                 x['file_name'] = row.fileName
+                x['date_str'] = row.dateStr
             links_rows += linkElements
         except TypeError: # (linkElements is NaN, and therefore a float)
             print('error')
@@ -182,13 +195,13 @@ for config in configs:
 errs
 
 #%%
-for config in configs:
-    device_name = config['device_name']
-    search_engine = config['search_engine']
-    query_cat = config['query_cat']
-    tmp = dfs[device_name][search_engine][query_cat]
-    print(device_name, search_engine, query_cat)
-    print(tmp[tmp.error])
+# for config in configs:
+#     device_name = config['device_name']
+#     search_engine = config['search_engine']
+#     query_cat = config['query_cat']
+#     tmp = dfs[device_name][search_engine][query_cat]
+#     print(device_name, search_engine, query_cat)
+#     print(tmp[tmp.error])
 
 
 #%% [markdown]
@@ -246,7 +259,6 @@ pd.crosstab(concatted_wp_links.norm_href, [concatted_wp_links.device_name, conca
 
 #%%
 # create the coordinate visualization
-DO_COORDS = False
 if DO_COORDS:
     for config in configs:
         device_name = config['device_name']
@@ -325,7 +337,8 @@ if DO_COORDS:
             plt.axhline(scroll_line, color='k', linestyle='-')
 
             overlay_file_name = f'{file_name}_overlay.png'
-            plt.savefig(overlay_file_name)
+            if SAVE_PLOTS:
+                plt.savefig(overlay_file_name)
             #plt.savefig(f'reports/overlays/{k}_{target}_{file_name}.png')
 
             plt.close()
@@ -369,9 +382,13 @@ for config in configs:
     if type(df) == defaultdict:
         continue
 
-    inc_rate = df.groupby('target').wikipedia_appears.agg(any).mean()
-    rh_inc_rate = df.groupby('target').wikipedia_appears_rh.agg(any).mean()
-    lh_inc_rate = df.groupby('target').wikipedia_appears_lh.agg(any).mean()
+    groupby = ['target', 'date_str']
+    inc_rate = df.groupby(groupby).wikipedia_appears.agg(any).mean()
+    inc = df.groupby(groupby).wikipedia_appears.agg(any).sum()
+    total = df.groupby(groupby).wikipedia_appears.agg(any).count()
+
+    rh_inc_rate = df.groupby(groupby).wikipedia_appears_rh.agg(any).mean()
+    lh_inc_rate = df.groupby(groupby).wikipedia_appears_lh.agg(any).mean()
 
     if is_mobile(device_name):
         d = CONSTANTS['mobile_lines']
@@ -384,18 +401,20 @@ for config in configs:
         'search_engine': search_engine,
         'device_name': device_name,
         'inc_rate': inc_rate,
+        'inc': inc,
+        'total': total,
         'rh_inc_rate': rh_inc_rate,
         'lh_inc_rate': lh_inc_rate,
         'matches': matches
     }
     for name in d.keys():
-        row_dict[f'{name}_inc_rate'] = df.groupby('target')[f'wikipedia_appears_{name}'].agg(any).mean()
-        row_dict[f'lh_{name}_inc_rate'] = df.groupby('target')[f'wikipedia_appears_lh_{name}'].agg(any).mean()
+        row_dict[f'{name}_inc_rate'] = df.groupby(groupby)[f'wikipedia_appears_{name}'].agg(any).mean()
+        row_dict[f'lh_{name}_inc_rate'] = df.groupby(groupby)[f'wikipedia_appears_lh_{name}'].agg(any).mean()
     for domain in [
         'twitter', 'youtube',
         'facebook',
     ]:
-        row_dict[f'{domain}_inc_rate'] = df.groupby('target')[f'{domain}_appears'].agg(any).mean() 
+        row_dict[f'{domain}_inc_rate'] = df.groupby(groupby)[f'{domain}_appears'].agg(any).mean() 
 
 
     row_dicts.append(row_dict)
@@ -403,14 +422,20 @@ for config in configs:
 results_df = pd.DataFrame(row_dicts)
 results_df.head(3)
 
+
 #%% [markdown]
 # ## How often did Wikipedia links appear in SERPs? (tabular)
 
 #%%
-
 results_df[
-    ['device_name', 'search_engine', 'inc_rate', 'matches']
+    ['device_name', 'search_engine', 'query_cat', 'inc_rate', 'inc', 'total']
 ]
+
+#%%
+print(results_df[results_df.search_engine == 'google'].matches.values)
+
+#%%
+
 
 
 # %%
@@ -528,7 +553,8 @@ g = sns.catplot(
     height=3, aspect=1.5, ci=None,
     sharex=False,
 )
-plt.savefig('reports/FP_catplot.png', dpi=300)
+if SAVE_PLOTS:
+    plt.savefig('reports/FP_catplot.png', dpi=300)
 
 
 #%% [markdown]
@@ -548,8 +574,10 @@ g = sns.catplot(
     height=3, aspect=1.5, ci=None,
     sharex=False,
 )
-plt.savefig('reports/LHRH_catplot.png', dpi=300)
+if SAVE_PLOTS:
+    plt.savefig('reports/LHRH_catplot.png', dpi=300)
 #%%
+# above-the fold middle ground
 g = sns.catplot(
     x="Query Category", y='Incidence rate',
     hue="Search Engine", col="Device", row='y-axis',
@@ -560,7 +588,8 @@ g = sns.catplot(
     height=3, aspect=1.5, ci=None,
     sharex=False,
 )
-plt.savefig('reports/AF_catplot.png', dpi=300)
+if SAVE_PLOTS:
+    plt.savefig('reports/AF_catplot.png', dpi=300)
 
 #%%
 g = sns.catplot(
@@ -569,10 +598,11 @@ g = sns.catplot(
     palette=['g', 'b', 'y'],
     #order=['common', 'trending', 'medical'],
     data=melted[melted['y-axis'] == LH_AF_MG], kind="bar",
-    height=2.5, aspect=1.5, ci=None,
+    height=3, aspect=1.5, ci=None,
     sharex=False,
 )
-plt.savefig('reports/LH_AF_catplot.png', dpi=300)
+if SAVE_PLOTS:
+    plt.savefig('reports/LH_AF_catplot.png', dpi=300)
 
 
 # %%
@@ -594,20 +624,18 @@ melted[
 
 se_minus_se = {}
 se_to_matches = {}
-sub = results_df[(results_df.device_name == 'Chrome on Windows') & (results_df.query_cat == 'covid19')]
-for i, row in sub.iterrows():
-    se_to_matches[row.search_engine] = set(row.matches)
-se_to_matches
-for k1, v1 in se_to_matches.items():
-    for k2, v2 in se_to_matches.items():
-        if k1 == k2:
-            continue
-        se_minus_se[f'{k1}_{k2}'] = v1 - v2
-
-#%%
-# what's in the first but not in the second
-
-pprint(se_minus_se)
+sub = results_df[(results_df.device_name == 'Chrome on Windows')]
+for groupname, group in sub.groupby('query_cat'):
+    print(groupname)
+    for i, row in group.iterrows():
+        se_to_matches[row.search_engine] = set(row.matches)
+    se_to_matches
+    for k1, v1 in se_to_matches.items():
+        for k2, v2 in se_to_matches.items():
+            if k1 == k2:
+                continue
+            se_minus_se[f'{k1}_{k2}'] = v1 - v2
+    pprint(se_minus_se)
 
 
 # %%
