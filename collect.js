@@ -10,7 +10,6 @@ const utils = require('./utils');
 // default mobile devices and custom "desktop devices"
 const emulatedDevices = require('./emulatedDevices');
 
-const outDir = 'output';
 const sleepRange = [30, 60];
 let curDir = '';
 
@@ -29,6 +28,8 @@ const platform = myArgs[1];
 const queryCat = myArgs[2];
 const queryFile = myArgs[3];
 const geoName = myArgs[4];
+const outDir = myArgs[5];
+
 // current simple options: hancock, sf, uw
 
 
@@ -117,51 +118,37 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
     await context.overridePermissions(page.url(), ['geolocation']);
     await utils.sleep(2000);
 
-    let linkHandlers;
-    if (platform === 'google') {
-        linkHandlers = await page.$x('//a[contains(text(), "Use precise location")]');
-    } else if (platform === 'duckduckgo') {
-        linkHandlers = await page.$x('//a[contains(text(), "Enable Location")]');
-    } else if (platform === 'bing') {
-        linkHandlers = await page.$x('//a[contains(text(), "Change")]');
-    }
-    if (linkHandlers.length > 0) {
-        await linkHandlers[0].click();
-        await page.waitFor(1000);
+    if (geoName !== 'None') {
+        let linkHandlers;
         if (platform === 'google') {
-            await page.reload({
-                waitUntil: ["networkidle0", "domcontentloaded"]
-            });
-        } else if (platform === 'bing' && !device.isMobile) {
-            await page.waitForSelector('input[name=geoname]');
-            await page.type('input[name=geoname]', coords[geoName]['zip'], {delay: 50});
-            await page.waitFor(1000);
-
-            const sel = 'input[id=chlocman_sbChangeLocationLink]'
-            //await page.waitForSelector(sel);
-            await page.click(sel);
-            console.log('clicked...')
-            //await page.waitForNavigation();
-            // const inputHandlers = await page.$x('//input[contains(text(), "Accept")]');
-            // if (inputHandlers.length > 0) {
-            //     intputHandlers[0].click();
-            //     console.log('clicked accept input');
-            // }
-            
-
-            // The below works only for mobile.
-            // const inputHandlers = await page.$x('//input[contains(text(), "Accept")]');
-            // if (inputHandlers.length > 0) {
-            //     intputHandlers[0].click();
-            //     console.log('clicked accept input');
-            // }
+            linkHandlers = await page.$x('//a[contains(text(), "Use precise location")]');
+        } else if (platform === 'duckduckgo') {
+            linkHandlers = await page.$x('//a[contains(text(), "Enable Location")]');
+        } else if (platform === 'bing') {
+            linkHandlers = await page.$x('//a[contains(text(), "Change")]');
         }
-    } else {
-        console.log('no location link found');
-    }
+        if (linkHandlers.length > 0) {
+            await linkHandlers[0].click();
+            await page.waitFor(1000);
+            if (platform === 'google') {
+                await page.reload({
+                    waitUntil: ["networkidle0", "domcontentloaded"]
+                });
+            } else if (platform === 'bing' && !device.isMobile) {
+                await page.waitForSelector('input[name=geoname]');
+                await page.type('input[name=geoname]', coords[geoName]['zip'], {delay: 50});
+                await page.waitFor(1000);
 
-    console.log('sleeping...');
-    await utils.sleep(3000);
+                const sel = 'input[id=chlocman_sbChangeLocationLink]'
+                await page.click(sel);
+            }
+        } else {
+            console.log('no location link found');
+        }
+
+        console.log('sleeping...');
+        await utils.sleep(3000);
+    }
     await utils.scrollDown(page);
 
     console.log('Loaded page, slept 1 sec, and scrolled down.');

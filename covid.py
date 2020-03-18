@@ -43,6 +43,6 @@ for config in configs:
         # todo other indices
         cmd = f"node collect.js {device} {search_engine} '{cat}' 0 {loc}"
         cmds.append(cmd)
-    concat = '& '.join(cmds)
+    concat = ' & '.join(cmds)
     print(concat)
     os.system(concat)
