@@ -1,12 +1,12 @@
-# Quick start
+# Installation
 Pre-reqs:
-node and npm (most recently run with node 10.15.3 and npm 6.4.1)
-python3 distribution (anaconda recommended)
+* node and npm (most recently run with node 10.15.3 and npm 6.4.1)
+* python3 distribution (anaconda recommended)
 
-To generating queries, you will need to install `suggest` from here: https://github.com/gitronald/suggests
 To play with the results_notebook.py, you may want to use a Jupyter-compatible tool, e.g. JupyterLab or VSCode's notebook features.
 
-To install relevant node packages
+To install relevant node packages:
+
 `npm install`
 
 ## Generating queries
@@ -30,11 +30,16 @@ To run script that
 To run google and bing at the same time (using & for parallel)
 `node collect.js iphonex google local local_0 uw localout & node collect.js iphonex bing local local_0 uw localout & wait`
 
+## Using headfull mode
+Change 'headless' argument to puppeteer.launch to false
+
 
 ## Misc
-run `node tests/testStealth.js` to see how puppeteer-extra-stealth is doing.
+* run `node tests/testStealth.js` to see how puppeteer-extra-stealth is doing.
 
 
 ## Data visualization and analysis
 * See `WikipediaSERP.html` for a worked example
 * See `results_notebook.py` for details
+
+

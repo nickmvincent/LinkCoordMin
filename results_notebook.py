@@ -102,6 +102,9 @@ query_sets = [
     #'covid19',
 ]
 query_sets = 'all'
+
+outdir = 'covidout' # where are the files
+
     
 
 #%% [markdown]
@@ -110,7 +113,6 @@ query_sets = 'all'
 
 #%%
 rows = []
-outdir = 'covidout' # where are the files
 for file in glob.glob(f'{outdir}/**/*.json', recursive=True):
     with open(file, 'r', encoding='utf8') as f:
         d = json.load(f)
@@ -518,20 +520,6 @@ renamed[[
     'Device', 'Search Engine', 'Query Category',
     FP, RH, LH, AF_pretty, LH_AF_pretty
 ]].to_csv('reports/main.csv', float_format="%.2f", index=False)
-
-#%%
-renamed[
-    renamed.Device == 'desktop'
-][[
-    'Search Engine', 'Query Category',
-    FP,  LH, RH, AF_pretty, LH_AF_pretty
-]].to_csv('reports/desktop.csv', float_format="%.2f", index=False)
-renamed[
-    renamed.Device == 'mobile'
-][[
-    'Search Engine', 'Query Category',
-    FP, AF_pretty
-]].to_csv('reports/mobile.csv', float_format="%.2f", index=False)
 
 #%%
 renamed.head(3)

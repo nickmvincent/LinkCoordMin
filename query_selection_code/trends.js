@@ -3,9 +3,6 @@ const fs = require('fs');
 
 
 
-
-
-
 const today = new Date();
 const niceDateStr = today.toString().replace(/:/g, '-'); // (nice for Windows filesystem)
 
