@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 import os
+from helpers import batch, write_batches
 load_folder = 'query_selection_code'
 save_folder = '../search_queries/prepped'
 n = 3
@@ -13,18 +14,7 @@ med_df = pd.DataFrame(MED_QUERIES)
 med_df
 
 #%%
-#https://stackoverflow.com/a/40755160
-def batch(iterable, n=1):
-    l = len(iterable)
-    for ndx in range(0, l, n):
-        yield iterable[ndx:min(ndx + n, l)]
 
-def write_batches(s, name, save_folder):
-    os.makedirs(f'{save_folder}/{name}', exist_ok=True)
-    s = pd.Series(s.str.strip().unique())
-    for i, chunk in enumerate(batch(s, 25)):
-        name_i = f'{i}.txt'
-        chunk.str.strip().to_csv(f'{save_folder}/{name}/{name_i}', index=False, header=False)
 
 
 

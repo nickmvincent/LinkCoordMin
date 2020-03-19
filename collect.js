@@ -42,7 +42,7 @@ If we are scraping search engines, we need to make our keywords into URLs
 If we are scraping other sites, the "keywords" should already be full urls
 =====*/
 let startStr = '';
-if (['google', 'bing', 'duckduckgo'].includes(platform)) {
+if (['google', 'bing', 'duckduckgo', 'yahoo'].includes(platform)) {
     startStr = {
         google: 'https://www.google.com/search?q=',
         bing: 'https://www.bing.com/search?q=',
@@ -65,6 +65,7 @@ const coords = {
         long: -87.6229,
         zip: 60611,
     },
+    //TODO
     sf: {
         lat: 37.7749,
         long: -122.4194
