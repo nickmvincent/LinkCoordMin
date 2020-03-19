@@ -1,0 +1,26 @@
+dailyTrends_2020-03-19T16-00-41.256Z
+relatedQueries_coronavirus_2020-03-19T16-00-41.256Z
+relatedQueries_coronavirus reddit_2020-03-19T16-00-41.256Z
+relatedQueries_coronavirus wiki_2020-03-19T16-00-41.256Z
+relatedQueries_covid 19_2020-03-19T16-00-41.256Z
+relatedQueries_covid 19 reddit_2020-03-19T16-00-41.256Z
+relatedQueries_covid 19 wiki_2020-03-19T16-00-41.256Z
+dailyTrends_2020-03-18T18-32-31.519Z
+relatedQueries_coronavirus_2020-03-18T18-32-31.519Z
+coronavirus_recurse1_bing_2020-03-19T02-22-39.830911Z
+coronavirus wiki_recurse1_bing_2020-03-19T15-59-01.745983Z
+covid 19 reddit_recurse1_bing_2020-03-19T15-59-27.007914Z
+coronavirus_recurse2_google_2020-03-18T17-47-58.255228Z
+coronavirus reddit_recurse1_google_2020-03-19T15-58-53.569307Z
+covid 19 reddit_recurse1_google_2020-03-19T15-59-28.401159Z
+covid 19 wiki_recurse1_google_2020-03-19T15-59-39.071262Z
+covid 19_recurse1_google_2020-03-19T15-59-25.976578Z
+coronavirus_recurse1_bing_2020-03-19T15-58-26.718856Z
+coronavirus_recurse2_bing_2020-03-19T02-24-25.536100Z
+coronavirus reddit_recurse1_bing_2020-03-19T15-58-49.443373Z
+covid 19 wiki_recurse1_bing_2020-03-19T15-59-33.060444Z
+coronavirus_recurse1_google_2020-03-19T15-58-39.718976Z
+coronavirus_recurse1_google_2020-03-18T17-46-04.570236Z
+coronavirus reddit_recurse1_bing_2020-03-19T02-25-02.549015Z
+covid 19_recurse1_bing_2020-03-19T15-59-12.895766Z
+coronavirus wiki_recurse1_google_2020-03-19T15-59-02.887369Z

@@ -14,7 +14,7 @@ for file in glob.glob(f'{raw_data_dir}/*_metadata.json'):
         print(meta_row)
         meta_date = meta_row['date']
         name = meta_row['name']
-        cat = f'{name}_{meta_date}'.replace(':', '')
+        cat = f'{name}_{meta_date}'.replace(':', '-')
         path = meta_row['raw'].replace('_raw_', '_df_').replace('.json', '.csv')
 
         with open(meta_row['raw'], 'r', encoding='utf8') as f:
@@ -64,12 +64,12 @@ for file in glob.glob(f'{raw_data_dir}/*_recurse*.csv'):
     assert len(list(df['root'].unique())) == 1
     date = list(df['dateAtSave'].unique())[0]
     assert len(list(df['dateAtSave'].unique())) == 1
-
-    date = date.replace(':', '-')
    # max_depth = df['depth'].max()
 
+    date = date.replace('+00:00', 'Z').replace(' ', 'T')
+
     cat = os.path.basename(file).replace('.csv', '')
-    cat = '_'.join(cat.split('_')[:-1]) + '_' + date
+    cat = '_'.join(cat.split('_')[:-1]) + '_' + date.replace(':', '-')
 
     all_cats.append({
         'name': os.path.basename(file),
@@ -83,5 +83,6 @@ for file in glob.glob(f'{raw_data_dir}/*_recurse*.csv'):
         print(f'Skipping {file} b/c attribute error (no autocomplete queries')
 
 pd.DataFrame(all_cats).to_csv('query_selection_code/all_cats.csv', index=False)
+pd.DataFrame(all_cats)['cat'].to_csv('query_selection_code/cat_names.txt', index=False)
 
 

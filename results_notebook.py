@@ -85,7 +85,7 @@ from analyze_links import analyze_links_df
 # Which experiments should we load?
 device_names = [
     'Chrome on Windows',
-    #'iPhone X',
+    'iPhone X',
 ]
 
 
@@ -96,9 +96,9 @@ search_engines = [
     # 'yahoo' not yet tested, but probably works decently well.
 ]
 query_sets = [
-    'top',
-    'med',
-    'trend',
+    #'top',
+    #'med',
+    #'trend',
     #'covid19',
 ]
 query_sets = 'all'
@@ -110,7 +110,7 @@ query_sets = 'all'
 
 #%%
 rows = []
-outdir = 'output/covidout' # where are the files
+outdir = 'covidout' # where are the files
 for file in glob.glob(f'{outdir}/**/*.json', recursive=True):
     with open(file, 'r', encoding='utf8') as f:
         d = json.load(f)
@@ -129,6 +129,9 @@ print('Query categories and how many SERPs per category:')
 print(full_df.queryCat.value_counts(), '\n')
 if query_sets == 'all':
     query_sets = list(full_df.queryCat.unique())
+
+#%%
+print(query_sets)
 
 #%%
 # Which SERPs are missing for each search engines?
@@ -217,7 +220,9 @@ for config in configs:
         dfs[device_name][search_engine][query_cat][['domain']]
     )
 print('Top 20 domains in all SERPs collected:')
-pd.concat(concat_all_domains)['domain'].value_counts()[:20]
+concatted_domains = pd.concat(concat_all_domains)['domain']
+print(concatted_domains.value_counts()[:20])
+
 
 #%% [markdown]
 # ## What Wikipedia links appeared in SERPs?
@@ -239,10 +244,19 @@ for config in configs:
 concatted_wp_links = pd.concat(concat_wp_links)
 concatted_wp_links['norm_href'].value_counts()
 
+
+
 #%%
 # How many times does each Wikipedia link appear for each device and search engine?
 print('How many times does each Wikipedia link appear for each device and search engine?')
 pd.crosstab(concatted_wp_links.norm_href, [concatted_wp_links.device_name, concatted_wp_links.search_engine])
+
+# %%
+print('How many times does each Wikipedia link appear for each device and search engine?')
+tmp_tab = pd.crosstab(concatted_wp_links.norm_href, [concatted_wp_links.search_engine, concatted_wp_links.target])
+for i, row in tmp_tab.iterrows():
+    print(row[row > 0])
+    print()
 
 
 #%%
