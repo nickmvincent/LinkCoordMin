@@ -16,8 +16,8 @@ search_engines =[
 
 # could be DB call here, or a mnaully set cats = [...]
 cat_df = pd.read_csv('query_selection_code/all_cats.csv')
-cat_df = cat_df[cat_df.date >= '2020-03-19']
-cat_df = cat_df[~cat_df.cat.str.contains('dailyTrends')]
+cat_df = cat_df[cat_df.date >= '2020-03-20']
+#cat_df = cat_df[~cat_df.cat.str.contains('dailyTrends')]
 cats = cat_df['cat']
 print(cats)
 
