@@ -1,7 +1,21 @@
 'use strict';
+// puppeteer + stealth
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 puppeteer.use(StealthPlugin())
+
+// arg parsing
+const argv = require('yargs')
+    .default('headless', true)
+    .default('sleepMin', 15)
+    .default('sleepMax', 30)
+    .default('geoName', 'None')
+    .default('outDir', 'outdir')
+    .default('queryDir', 'search_queries/prepped')
+    //.default('devicesSelected', 'chromewindows')
+    .argv;
+console.log(argv);
+
 
 const fs = require('fs');
 const mkdirp = require('mkdirp');
@@ -11,29 +25,29 @@ const utils = require('./utils');
 const emulatedDevices = require('./emulatedDevices');
 
 const sleepRange = [15, 30];
+const headless = true;
 let curDir = '';
 
-const myArgs = process.argv.slice(2);
+//const myArgs = process.argv.slice(2);
+const deviceArg = argv.device;
 let devicesSelected = [];
-if (myArgs[0] == 'allDevices') {
+if (deviceArg == 'allDevices') {
     console.log('Using all devices specifide in emulatedDevices.js');
     for (const key of Object.keys(emulatedDevices)) {
         devicesSelected.push(emulatedDevices[key]);
         console.log(emulatedDevices[key]);
     }
 } else {
-    devicesSelected.push(emulatedDevices[myArgs[0]])
+    devicesSelected.push(emulatedDevices[deviceArg])
 }
-const platform = myArgs[1];
-const queryCat = myArgs[2];
-const queryFile = myArgs[3];
-const geoName = myArgs[4];
-const outDir = myArgs[5];
+const platform = argv.platform;
+const queryCat = argv.queryCat;
+const queryFile = argv.queryFile;
+const geoName = argv.geoName;
+const outDir = argv.outDir;
+const queryDir = argv.queryDir;
 
-// current simple options: hancock, sf, uw
-
-
-const target_file = `search_queries/prepped/${queryCat}/${queryFile}.txt`;
+const target_file = `${queryDir}/${queryCat}/${queryFile}.txt`;
 const text = fs.readFileSync(target_file, "utf-8");
 const targets = text.split("\n").filter(Boolean); // removes empty strings
 
@@ -65,11 +79,6 @@ const coords = {
         long: -87.6229,
         zip: 60611,
     },
-    //TODO
-    sf: {
-        lat: 37.7749,
-        long: -122.4194
-    },
     uw: {
         lat: 47.655548,
         long: -122.303200,
@@ -85,7 +94,7 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
 
     const browser = await puppeteer.launch({
         args: ['--no-sandbox', ],
-        headless: true
+        headless: headless
     });
     const context = browser.defaultBrowserContext();
     context.clearPermissionOverrides();
@@ -125,7 +134,7 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
             linkHandlers = await page.$x('//a[contains(text(), "Use precise location")]');
         } else if (platform === 'duckduckgo') {
             linkHandlers = await page.$x('//a[contains(text(), "Enable Location")]');
-        } else if (platform === 'bing') {
+        } else if (platform === 'bing' && !device.isMobile) {
             linkHandlers = await page.$x('//a[contains(text(), "Change")]');
         }
         if (linkHandlers.length > 0) {
@@ -150,9 +159,11 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
         console.log('sleeping...');
         await utils.sleep(3000);
     }
-    await utils.scrollDown(page);
 
-    console.log('Loaded page, slept 1 sec, and scrolled down.');
+    if (platform != 'reddit') {
+        await utils.scrollDown(page);
+        
+    }
 
     const pngPath = `${curDir}/${niceDateStr}.png`
     console.log(pngPath);
