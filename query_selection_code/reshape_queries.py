@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 from helpers import batch, write_batches
-load_folder = 'query_selection_code'
+load_folder = 'query_selection_code/curated'
 save_folder = '../search_queries/prepped'
 n = 3
 write_samples = True
