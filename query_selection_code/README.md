@@ -5,7 +5,7 @@
 * `script_generated_queries.py` takes the raw data from suggests and google-trends-api and creates easy-to-check csv files and `prepped`, ready-to-go keyword files.
 * `reshape_queries.py` reshapes and `preps` the curated queries used in Vincent and Hecht 2020 (link goes here). 
 
-To generate queries, you will need to install `suggests` from here: https://github.com/gitronald/suggests
+To generate queries, you will need to install `suggests` from here: https://github.com/nickmvincent/suggests
 
 # Steps to generate a set of queries
 * First run `query_selection_code/trends.js` and `query_selection_code/recurse_suggests.py`
