@@ -7,11 +7,14 @@ puppeteer.use(StealthPlugin())
 // arg parsing
 const argv = require('yargs')
     .default('headless', true)
+    .describe('f', 'Use headless browsing')
     .default('sleepMin', 15)
     .default('sleepMax', 30)
     .default('geoName', 'None')
     .default('outDir', 'outdir')
     .default('queryDir', 'search_queries/prepped')
+    .help('h')
+    .alias('h', 'help')
     //.default('devicesSelected', 'chromewindows')
     .argv;
 console.log(argv);
