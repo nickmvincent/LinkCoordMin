@@ -3,12 +3,13 @@ import glob
 import pandas as pd
 import argparse
 parser = argparse.ArgumentParser()
-# TODO: parametrize devices + platforms (Search engines?)
+# TODO: create args for: devices, platforms, locs
 parser.add_argument("--date_gte", help="what date to grab queries from, as a YYYY-MM-DD string", default='2020-03-20')
 parser.add_argument("--cats_file", help="File with category data", default='query_selection_code/all_cats.csv')
 parser.add_argument("--out_dir", help="name of folder for outputs", default='output/covidout_mar20')
 
-# python3 covid.py --date_gte=2020-03-22 --out_dir=output/covidoutmar22
+# Ex:
+# python covid.py --date_gte=2020-03-22 --out_dir=output/covidoutmar22
 
 
 
@@ -45,7 +46,6 @@ print(f'Reading cats from {args.cats_file} created after {args.date_gte}')
 print(f'Writing to {args.out_dir}')
 
 for device in devices:
-    break
     for loc in locs:
         for cat in cats:
             files = glob.glob(f'search_queries/prepped/{cat}/*.txt')
