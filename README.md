@@ -17,6 +17,9 @@ The `collect.js` script runs SERP collection.
 
 There are a variety of named command line args you can pass. Check out collect.js to most directly see the options, or use `collect.js -h`.
 
+# Example Pipeline
+See EXAMPLE_RUN.sh to see how you can 4 scripts in a sequence to programmatically generate queries and save SERP data for these queries.
+
 ## Examples
 
 To run script that
@@ -35,7 +38,9 @@ For bing:
 
 To run google and bing at the same time (using & for parallel):
 
-`node collect.js --device=iphonex --platform=google --queryCat=med --queryFile=med_sample3 --geoName=uw --outDir=output & node collect.js --device=iphonex --platform=bing --queryCat=med --queryFile=med_sample3 --geoName=uw --outDir=output & wait`
+`node collect.js --device=chromewindows --platform=google --queryCat=covid_stems --queryFile=0 --geoName=None --outDir=output/covidout_mar20 & node collect.js --device=chromewindows --platform=bing --queryCat=covid_stems --queryFile=0 --geoName=None --outDir=output/covidout_mar20 & wait`
+
+
 
 This software can collect data for websites other than SERPs as well!
 `node collect.js --device=chromewindows --platform=reddit --queryCat=reddit --queryFile=0 --geoName=None --outDir=output/reddit`
