@@ -30,11 +30,11 @@ To run script that
 5) from the `uw` location (university of washington lat / long /zip)
 6) to dir `out`
 
-`node collect.js --device=iphonex --platform=bing --queryCat=med --queryFile=covid_stems --geoName=uw --outDir=output`
+`node collect.js --device=iphonex --platform=bing --queryCat=covid_stems --queryFile=0 --geoName=uw --outDir=nicktest`
 
 
 For bing:
-`node collect.js --device=iphonex --platform=bing --queryCat=med --queryFile=covid_stems --geoName=uw --outDir=output`
+`node collect.js --device=iphonex --platform=bing --queryCat=covid_stems --queryFile=0 --geoName=None --outDir=output`
 
 To run google and bing at the same time (using & for parallel):
 
@@ -60,4 +60,7 @@ This software can collect data for websites other than SERPs as well!
 * See `WikipediaSERP.html` for a worked example
 * See `results_notebook.py` for details
 
+
+# Known Issues
+* Bing mobile pages only load some reuslts (appears to be 4-6 items)
 

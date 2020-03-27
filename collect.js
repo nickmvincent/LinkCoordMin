@@ -123,9 +123,17 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
     });
 
     console.log('Browser launched and page loaded');
-    await page.goto(linkObj.link, {
-        waitUntil: 'networkidle2'
-    });
+    try {
+        await page.goto(linkObj.link, {
+            waitUntil: 'networkidle2'
+        });
+    } catch (e) {
+        console.log('err with page.goto!');
+        const errPath = `${curDir}/ERR_${niceDateStr}.txt`;
+        const err = {gotoErr: e}
+        fs.writeFile(errPath, err, 'utf8', () => console.log(`Wrote err to ${errPath}`));
+    }
+    
     // var cookies = await page.cookies();
     // console.log(cookies);
     await context.overridePermissions(page.url(), ['geolocation']);
@@ -176,10 +184,14 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
     });
 
     let linkElements;
+    let err = false;
+    let errMsg = "";
     try {
         linkElements = await page.$$eval('a', utils.getPos);
     } catch (e) {
         console.log(e);
+        err = true;
+        errMsg = e;
     }
 
     const output = {
@@ -188,6 +200,7 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
         linkElements,
         queryCat,
         queryFile,
+        errMsg,
         deviceName: device.name,
         link: linkObj.link,
         platform: linkObj.platform,
