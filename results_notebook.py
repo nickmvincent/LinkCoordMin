@@ -88,7 +88,6 @@ device_names = [
     'iPhone X',
 ]
 
-
 search_engines = [
     'google',
     'bing',
@@ -103,7 +102,7 @@ query_sets = [
 ]
 query_sets = 'all'
 
-outdir = 'covidout' # where are the files
+outdir = 'output/covidoutmar22' # where are the files
 
     
 
@@ -134,6 +133,13 @@ if query_sets == 'all':
 
 #%%
 print(query_sets)
+
+#%%
+# Check for any SERPs with empty linkElements data.
+# This means there was an error with collection for that SERP!
+# Ideally, this returns an empty df.
+full_df[full_df.linkElements.map(lambda x: len(x) < 0)]
+
 
 #%%
 # Which SERPs are missing for each search engines?
@@ -213,8 +219,10 @@ errs
 # ## Let's see which links are most common
 
 #%%
+#%%
 concat_all_domains = []
 for config in configs:
+    print(config)
     device_name = config['device_name']
     search_engine = config['search_engine']
     query_cat = config['query_cat']
@@ -246,7 +254,23 @@ for config in configs:
 concatted_wp_links = pd.concat(concat_wp_links)
 concatted_wp_links['norm_href'].value_counts()
 
-
+#%%
+print('What are the reddit links showing up on desktop?')
+concat_wp_links = []
+for config in configs:
+    device_name = config['device_name']
+    search_engine = config['search_engine']
+    query_cat = config['query_cat']
+    tmp = dfs[device_name][search_engine][query_cat]
+    tmp = tmp[tmp.reddit_appears]
+    tmp['norm_href'] = tmp.href.apply(
+        lambda x: unquote(x.replace('http://', '').replace('https://', '').replace('.m.', '.'))
+    )
+    concat_wp_links.append(
+        tmp
+    )
+concatted_wp_links = pd.concat(concat_wp_links)
+concatted_wp_links['norm_href'].value_counts()
 
 #%%
 # How many times does each Wikipedia link appear for each device and search engine?
