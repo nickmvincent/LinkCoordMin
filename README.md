@@ -14,7 +14,8 @@ Originally, I added this functionality to a fork of [se-scraper](https://github.
 To play with the results_notebook.py, you may want to use a Jupyter-compatible tool, e.g. JupyterLab or VSCode's notebook feature.
 
 ## Downloading node packages
-To install relevant node packages into a local `node_modules` folder:
+To install relevant node packages into a local `node_modules` folder, navigate to this folder (e.g. `cd LinkCoordMin`) and run:
+
 `npm install`
 
 # Generating search queries
@@ -23,28 +24,28 @@ See README in `query_selection_code/`
 # SERP Collection
 The `collect.js` script runs SERP collection.
 
-There are a variety of named command line args you can pass. Check out collect.js to most directly see the options, or use `collect.js -h`.
+There are a variety of named command line args you can pass. Check out collect.js to most directly see the options, or use `collect.js -h`. You can also see examples below.
 
 # Example Pipeline
-See EXAMPLE_RUN.sh to see how you can 4 scripts in a sequence to programmatically generate queries and save SERP data for these queries.
+See `EXAMPLE_RUN.sh` to see how you can 4 scripts in a sequence to programmatically generate queries and save SERP data for these queries.
 
-## Examples
+## Specific Examples
 
 To run script that
-1) emulates iPhone X using puppeteer's Devices API
-2) searches the Google search engine (by visiting https://www.google.com/search&q=)
-3) makes "medical queries"
-4) from the `search_queries/prepped/med/med_sample3.txt` file
-5) from the `uw` location (university of washington lat / long /zip)
-6) to dir `out`
+1) emulates iPhone X using puppeteer's Devices API (`--device=iphonex`)
+2) searches the Google search engine (by visiting https://www.google.com/search&q=) ((`--platform=google`))
+3) makes "covid_stems queries" (`--queryCat=covid_stems`)
+4) from the `search_queries/prepped/covid_stems/0.txt` file (`--queryFile=0`)
+5) from the `uw` location (university of washington lat / long /zip) (`--geoName=uw`)
+6) to dir `test` (`--outDir=test`)
 
-`node collect.js --device=iphonex --platform=bing --queryCat=covid_stems --queryFile=0 --geoName=uw --outDir=nicktest`
+`node collect.js --device=iphonex --platform=google --queryCat=covid_stems --queryFile=0 --geoName=uw --outDir=test`
 
 
-For bing:
+For bing & no location spoofing:
 `node collect.js --device=iphonex --platform=bing --queryCat=covid_stems --queryFile=0 --geoName=None --outDir=output`
 
-To run google and bing at the same time (using & for parallel):
+To run google and bing at the same time (using `&` for parallel):
 
 `node collect.js --device=chromewindows --platform=google --queryCat=covid_stems --queryFile=0 --geoName=None --outDir=output/covidout_mar20 & node collect.js --device=chromewindows --platform=bing --queryCat=covid_stems --queryFile=0 --geoName=None --outDir=output/covidout_mar20 & wait`
 
@@ -68,12 +69,13 @@ Note that --sleepMin and --sleepMax default to 15 and 30 (seconds) respectively.
 # Data visualization and analysis
 * See `WikipediaSERP.html` for a worked example
 See `results_notebook.py` for details. If you're not using an Anaconda environment, you may need to `pip install` dependencies like pandas, matplotlib, etc.  
+
 `results_notebook.py` is formatted for use with VsCode's [interactive jupyter notebook features](https://code.visualstudio.com/docs/python/jupyter-support). You can alternatively use the `results_notebook.ipynb` version (updated semi-regularly) or just run `results_notebook.py` as a Python script.
 
 e.g. set SAVE_PLOTS to True, then run `results_notebook.py > my_results.txt`
 
-
-
 # Known Issues
 * Bing mobile pages only loads top results (appears to be 4-6 items). The bottom half of the page is left with placeholder images, e.g. it hasn't loaded the full page yet. When this issue first arose, the "scrollDown" function seemed to fix it (issues scroll action til the bottom is reached).
+* Reddit sometimes has issues loading
+* Duckduckgo has some hard-to-replicate bugs when location spoofing.
 
