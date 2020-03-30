@@ -1,4 +1,12 @@
 # Installation
+This software navigates to a web link, collects all the links, records their "coordinates" (their [getBoundingClientRect position](https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect)), and saves this data alongside a screenshot of the page.
+
+It uses the open source [puppeteer](https://github.com/puppeteer/puppeteer/) library to automate headless browsing.
+
+Originally, I added this functionality to a fork of [se-scraper](https://github.com/NikolaiT/se-scraper). This repo contains a separate, more minimal implementation of the link coordinate collection without the additional scraping features from se-scraper (e.g. use of [puppeteer-cluster](https://github.com/thomasdondorf/puppeteer-cluster), specific parsing rules for Google news, etc.).
+
+
+# Installation
 ## Pre-reqs
 * node and npm (most recently run with node 10.15.3 and npm 6.4.1)
 * python3 distribution (anaconda recommended)
@@ -41,9 +49,10 @@ To run google and bing at the same time (using & for parallel):
 `node collect.js --device=chromewindows --platform=google --queryCat=covid_stems --queryFile=0 --geoName=None --outDir=output/covidout_mar20 & node collect.js --device=chromewindows --platform=bing --queryCat=covid_stems --queryFile=0 --geoName=None --outDir=output/covidout_mar20 & wait`
 
 
-
 This software can collect data for websites other than SERPs as well!
 `node collect.js --device=chromewindows --platform=reddit --queryCat=reddit --queryFile=0 --geoName=None --outDir=output/reddit`
+
+Note that --sleepMin and --sleepMax default to 15 and 30 (seconds) respectively. You may wish to make these larger for longer jobs to avoid being rate limited (see discussion in the [se-scraper repo](https://github.com/NikolaiT/se-scraper/issues/19)).
 
 
 # Using headfull mode for developmet
@@ -58,9 +67,13 @@ This software can collect data for websites other than SERPs as well!
 
 # Data visualization and analysis
 * See `WikipediaSERP.html` for a worked example
-* See `results_notebook.py` for details
+See `results_notebook.py` for details. If you're not using an Anaconda environment, you may need to `pip install` dependencies like pandas, matplotlib, etc.  
+`results_notebook.py` is formatted for use with VsCode's [interactive jupyter notebook features](https://code.visualstudio.com/docs/python/jupyter-support). You can alternatively use the `results_notebook.ipynb` version (updated semi-regularly) or just run `results_notebook.py` as a Python script.
+
+e.g. set SAVE_PLOTS to True, then run `results_notebook.py > my_results.txt`
+
 
 
 # Known Issues
-* Bing mobile pages only load some reuslts (appears to be 4-6 items)
+* Bing mobile pages only loads top results (appears to be 4-6 items). The bottom half of the page is left with placeholder images, e.g. it hasn't loaded the full page yet. When this issue first arose, the "scrollDown" function seemed to fix it (issues scroll action til the bottom is reached).
 
