@@ -17,7 +17,7 @@ const argv = require('yargs')
     .alias('h', 'help')
     //.default('devicesSelected', 'chromewindows')
     .argv;
-console.log(argv);
+console.log('args', argv);
 
 
 const fs = require('fs');
@@ -28,7 +28,7 @@ const utils = require('./utils');
 const emulatedDevices = require('./emulatedDevices');
 
 const sleepRange = [15, 30];
-const headless = true;
+const headless = argv.headless;
 let curDir = '';
 
 //const myArgs = process.argv.slice(2);
@@ -134,6 +134,14 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
         fs.writeFile(errPath, err, 'utf8', () => console.log(`Wrote err to ${errPath}`));
     }
     
+    console.log('device:', device)
+    console.log(platform, device.viewport.isMobile)
+    // if (platform === 'bing' && device.viewport.isMobile) {
+    //     console.log('tapping');
+    //     //await page.tap();
+    // }
+
+    
     // var cookies = await page.cookies();
     // console.log(cookies);
     await context.overridePermissions(page.url(), ['geolocation']);
@@ -145,7 +153,7 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
             linkHandlers = await page.$x('//a[contains(text(), "Use precise location")]');
         } else if (platform === 'duckduckgo') {
             linkHandlers = await page.$x('//a[contains(text(), "Enable Location")]');
-        } else if (platform === 'bing' && !device.isMobile) {
+        } else if (platform === 'bing' && !device.viewport.isMobile) {
             linkHandlers = await page.$x('//a[contains(text(), "Change")]');
         }
         if (linkHandlers.length > 0) {
@@ -155,7 +163,7 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
                 await page.reload({
                     waitUntil: ["networkidle0", "domcontentloaded"]
                 });
-            } else if (platform === 'bing' && !device.isMobile) {
+            } else if (platform === 'bing' && !device.viewport.isMobile) {
                 await page.waitForSelector('input[name=geoname]');
                 await page.type('input[name=geoname]', coords[geoName]['zip'], {delay: 50});
                 await page.waitFor(1000);
@@ -167,13 +175,17 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
             console.log('no location link found');
         }
 
-        console.log('sleeping...');
+        console.log('sleeping 3 seconds...');
         await utils.sleep(3000);
     }
 
     if (platform != 'reddit') {
-        await utils.scrollDown(page);
         
+        await utils.scrollDown(page);
+        // if (platform === 'bing') {
+        //     await page.waitForSelector('.b_mpref');
+        // }
+
     }
 
     const pngPath = `${curDir}/${niceDateStr}.png`
@@ -225,7 +237,7 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
     await browser.close();
 }
 
-console.log(devicesSelected);
+console.log('devices selected', devicesSelected);
 const results = {};
 (async () => {
     const date = new Date();

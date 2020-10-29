@@ -37,7 +37,7 @@ const scrollDown = async (page) => {
             var distance = 100;
             var timer = setInterval(() => {
                 var scrollHeight = document.body.scrollHeight;
-                window.scrollBy(0, distance);
+                window.scrollBy(0, distance, behavior='smooth');
                 totalHeight += distance;
 
                 if (totalHeight >= scrollHeight) {
