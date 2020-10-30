@@ -80,7 +80,7 @@ const coords = {
     hancock: {
         lat: 41.8988,
         long: -87.6229,
-        zip: 60611,
+        zip: '60611',
     },
     uw: {
         lat: 47.655548,
@@ -100,23 +100,24 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
         headless: headless
     });
     const context = browser.defaultBrowserContext();
-    context.clearPermissionOverrides();
+    //await context.clearPermissionOverrides();
     await context.overridePermissions(linkObj.link, ['geolocation']);
+    //await context.overridePermissions(linkObj.link + '#', ['geolocation']);
     const page = await context.newPage();
     await page.setCacheEnabled(false);
 
     const cdp = await page.target().createCDPSession();
 
     await page.emulate(device);
+    
     if (geoName !== 'None') {
         await page.setGeolocation({
             latitude: coords[geoName]['lat'],
             longitude: coords[geoName]['long'],
-            //accuracy: 100,
         });
-    } 
-    
+    }
 
+    // Bing will open a dialog box for changing location. Below code will accept it.
     page.on('dialog', async dialog => {
         console.log(dialog.message());
         await dialog.accept();
@@ -133,36 +134,56 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
         const err = {gotoErr: e}
         fs.writeFile(errPath, err, 'utf8', () => console.log(`Wrote err to ${errPath}`));
     }
-    
-    console.log('device:', device)
-    console.log(platform, device.viewport.isMobile)
-    // if (platform === 'bing' && device.viewport.isMobile) {
-    //     console.log('tapping');
-    //     //await page.tap();
-    // }
 
     
+
+    // Check geolocation permissions
+    // const granted = await page.evaluate(async () => {
+    //     return (await navigator.permissions.query({name: 'geolocation'})).state;
+    // });
+    // console.log('Granted:', granted);
+    
+    console.log('device:', device)
+    console.log('platform', platform, 'ismobile', device.viewport.isMobile);
+
+    
+    // To print cookies
     // var cookies = await page.cookies();
+    // console.log('cookies');
     // console.log(cookies);
-    await context.overridePermissions(page.url(), ['geolocation']);
-    await utils.sleep(2000);
+    //
+    await utils.sleep(1000);
+
 
     if (geoName !== 'None') {
         let linkHandlers;
+        let button;
         if (platform === 'google') {
-            linkHandlers = await page.$x('//a[contains(text(), "Use precise location")]');
+            // FLAG: This will break if the "Use precise location" text changes.
+            button = '//a[contains(text(), "Use precise location")]';
         } else if (platform === 'duckduckgo') {
-            linkHandlers = await page.$x('//a[contains(text(), "Enable Location")]');
+            button = '//a[contains(text(), "Enable Location")]';
         } else if (platform === 'bing' && !device.viewport.isMobile) {
-            linkHandlers = await page.$x('//a[contains(text(), "Change")]');
+            button = '//a[contains(text(), "Change")]';
         }
+        linkHandlers = await page.$x(button);
         if (linkHandlers.length > 0) {
-            await linkHandlers[0].click();
-            await page.waitFor(1000);
+            // click the link then wait 1 second
+            console.log('clicking link')
+            await page.setGeolocation({
+                latitude: coords[geoName]['lat'],
+                longitude: coords[geoName]['long'],
+            });
+            
+            await linkHandlers[0].click(),
+            await page.waitFor(3000);
+            
+            
             if (platform === 'google') {
                 await page.reload({
                     waitUntil: ["networkidle0", "domcontentloaded"]
                 });
+
             } else if (platform === 'bing' && !device.viewport.isMobile) {
                 await page.waitForSelector('input[name=geoname]');
                 await page.type('input[name=geoname]', coords[geoName]['zip'], {delay: 50});
