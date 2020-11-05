@@ -60,7 +60,7 @@ SAVE_PLOTS = False
 
 # %%
 # new data will be in results/*. This is an example!
-filename = 'example_Wed Oct 28 2020 16-21-08 GMT-0500 (Central Daylight Time).json'
+filename = 'nov5_example/Chrome on Windows/https---www.google.com-search?q=protests/Thu Nov 05 2020 14-12-08 GMT-0600 (Central Standard Time).json'
 with open(filename, 'r', encoding='utf8') as f:
     d = json.load(f)
 d.keys()
@@ -80,3 +80,8 @@ analyzed.head()
 
 #%%
 analyzed.domain.value_counts()
+# %%
+tmp = analyzed.sort_values('top')[['top', 'left', 'domain', 'href']]
+# drop "google" domains
+tmp[~tmp.domain.str.contains('google')]
+# %%

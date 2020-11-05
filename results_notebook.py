@@ -86,24 +86,25 @@ from analyze_links import analyze_links_df
 device_names = [
     'Chrome on Windows',
     'iPhone X',
+    #'Galaxy S5'
 ]
 
 search_engines = [
     'google',
     'bing',
-    #'duckduckgo',
+    'duckduckgo',
     # 'yahoo' not yet tested, but probably works decently well.
 ]
 query_sets = [
-    #'top',
-    #'med',
-    #'trend',
+    'top',
+    'med',
+    'trend',
     #'covid19',
 ]
-query_sets = 'all'
+#query_sets = 'all'
 
-outdir = 'output/covidoutmar22' # where are the files
-
+outdir = 'output/repli_output' # where are the files
+#outdir = 'output/repli_oct2020'
     
 
 #%% [markdown]
@@ -134,6 +135,8 @@ if query_sets == 'all':
 #%%
 print(query_sets)
 
+#%%
+full_df[full_df.linkElements.isna()]
 #%%
 # Check for any SERPs with empty linkElements data.
 # This means there was an error with collection for that SERP!
@@ -233,7 +236,8 @@ print('Top 20 domains in all SERPs collected:')
 concatted_domains = pd.concat(concat_all_domains)['domain']
 print(concatted_domains.value_counts()[:20])
 
-
+#%%
+concatted_domains[concatted_domains.str.contains('wikipedia')].value_counts()
 #%% [markdown]
 # ## What Wikipedia links appeared in SERPs?
 #%%
