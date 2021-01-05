@@ -84,9 +84,8 @@ from analyze_links import analyze_links_df
 #%%
 # Which experiments should we load?
 device_names = [
-    'Chrome on Windows',
     'iPhone X',
-    #'Galaxy S5'
+    'Galaxy S5'
 ]
 
 search_engines = [
@@ -99,11 +98,10 @@ query_sets = [
     'top',
     'med',
     'trend',
-    #'covid19',
 ]
 #query_sets = 'all'
 
-outdir = 'output/repli_output' # where are the files
+outdir = 'output/android_v_ios' # where are the files
 #outdir = 'output/repli_oct2020'
     
 

@@ -85,3 +85,7 @@ tmp = analyzed.sort_values('top')[['top', 'left', 'domain', 'href']]
 # drop "google" domains
 tmp[~tmp.domain.str.contains('google')]
 # %%
+
+# %%
+
+# %%

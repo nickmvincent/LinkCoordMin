@@ -17,7 +17,6 @@ args = parser.parse_args()
 print(args)
 
 devices = [
-    'chromewindows',
     'iphonex',
     'galaxys5'
 ]

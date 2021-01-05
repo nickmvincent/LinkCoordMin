@@ -1,6 +1,6 @@
 #%%
 from helpers import extract
-from constants import CONSTANTS
+from my_constants import CONSTANTS
 
 
 #%% [markdown]
