@@ -89,7 +89,10 @@ const coords = {
     }
 }
 const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) => {
-    const niceLink = linkObj.link.replace(/\//g, "-").replace(/:/g, '-'); // (nice for Windows filesystem)
+    let niceLink = linkObj.link.replace(/\//g, "-").replace(/:/g, '-'); // (nice for Windows filesystem)
+    if (niceLink.length > 50) {
+        niceLink = niceLink.substring(0, 50);
+    }
     const niceDateStr = dateStr.replace(/:/g, '-'); // (nice for Windows filesystem)
 
     curDir = `${outDir}/${device.name}/${niceLink}`;
