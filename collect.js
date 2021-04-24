@@ -90,8 +90,8 @@ const coords = {
 }
 const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) => {
     let niceLink = linkObj.link.replace(/\//g, "-").replace(/:/g, '-'); // (nice for Windows filesystem)
-    if (niceLink.length > 50) {
-        niceLink = niceLink.substring(0, 50);
+    if (niceLink.length > 100) {
+        niceLink = niceLink.substring(0, 100);
     }
     const niceDateStr = dateStr.replace(/:/g, '-'); // (nice for Windows filesystem)
 
