@@ -135,7 +135,7 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
         console.log('err with page.goto!');
         const errPath = `${curDir}/ERR_${niceDateStr}.txt`;
         const err = {gotoErr: e}
-        fs.writeFile(errPath, err, 'utf8', () => console.log(`Wrote err to ${errPath}`));
+        fs.writeFile(errPath, JSON.stringify(err), 'utf8', () => console.log(`Wrote err to ${errPath}`));
     }
 
     
@@ -250,13 +250,20 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
 
     const mhtmlPath = `${curDir}/${niceDateStr}.mhtml`;
     
-    const {
-        data
-    } = await cdp.send('Page.captureSnapshot', {
-        format: 'mhtml'
-    });
-    fs.writeFileSync(mhtmlPath, data);
-
+    // TODO: error handling here.
+    try {
+        const {
+            data
+        } = await cdp.send('Page.captureSnapshot', {
+            format: 'mhtml'
+        });
+        fs.writeFileSync(mhtmlPath, data);
+    } catch (e) {
+        console.log('err with mhtml');
+        const errPath = `${curDir}/ERR_MHTML_${niceDateStr}.txt`;
+        const err = {gotoErr: e}
+        fs.writeFile(errPath, JSON.stringify(err), 'utf8', () => console.log(`Wrote err to ${errPath}`));
+    }
     // === all done! == //
     await browser.close();
 }
