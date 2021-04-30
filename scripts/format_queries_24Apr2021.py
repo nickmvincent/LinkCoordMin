@@ -1,19 +1,19 @@
 import glob
 
-out = ""
 path = 'search_queries/prepped/hw/*'
 new_path = 'search_queries/prepped/hw_nice/'
 
 paths = glob.glob(path)
 print(paths)
 for x in paths:
+    out = ""
     with open(x, 'r') as f:
-        lines = f.readlines() # should remove all newlines
+        lines = f.readlines()
     for line in lines:
         if line == "\n":
             out += line
         else:
-            out += line.strip("\n")
+            out += line.replace("\n", ' ')
 
     parts = x.split('/')
     print(parts)

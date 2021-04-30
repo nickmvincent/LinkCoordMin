@@ -13,9 +13,7 @@ args = parser.parse_args()
 print(args)
 
 devices = [
-    'chromewindows',
-    'iphonex'
-]
+    'chromewindows',]
 
 search_engines =[
     'google',
@@ -59,3 +57,6 @@ for config in configs:
     concat = ' & '.join(cmds) + ' & wait'
     print(concat)
     os.system(concat)
+
+
+# node collect.js --device=chromewindows --platform=bing --queryCat='hw_nice' --queryFile=Algorithm_Design_Manual_Chapter_3 --geoName=None --outDir=output/test

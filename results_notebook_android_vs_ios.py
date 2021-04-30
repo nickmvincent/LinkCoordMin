@@ -139,7 +139,7 @@ full_df[full_df.linkElements.isna()]
 # Check for any SERPs with empty linkElements data.
 # This means there was an error with collection for that SERP!
 # Ideally, this returns an empty df.
-full_df[full_df.linkElements.map(lambda x: len(x) < 0)]
+full_df[full_df.linkElements.map(lambda x: len(x) == 0)]
 
 
 #%%
