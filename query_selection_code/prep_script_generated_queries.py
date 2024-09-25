@@ -82,9 +82,6 @@ for file in glob.glob(f'{raw_data_dir}/*_recurse*.csv'):
     except AttributeError:
         print(f'Skipping {file} b/c attribute error (no autocomplete queries')
 
-df = pd.DataFrame(all_cats).sort_values('cat')
 df.to_csv('query_selection_code/all_cats.csv', index=False)
-cats = list(df['cat']) + ['covid_stems']
-with open('query_selection_code/cat_names.txt', 'w') as f:
-    f.write('\n'.join(cats))
+
 
