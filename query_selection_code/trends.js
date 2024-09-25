@@ -8,9 +8,6 @@ const queryCats = [];
 
 (async () => {
 
-    const text = fs.readFileSync(stem_file, "utf-8");
-    const targets = text.split("\n").filter(Boolean); // removes empty strings
-
     await googleTrends.dailyTrends({
             trendDate: today,
             geo: 'US',
