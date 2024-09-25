@@ -1,3 +1,8 @@
+# For greggle project
+
+* We'll just use the `trends.js` script without the stems. We don't use the suggestions.
+
+
 # Collecting Google Trends data
 
 * `recurse_suggests.py` uses from Ronaldson et al. (https://github.com/gitronald/suggests) to scrape queries from Google's autocompete
