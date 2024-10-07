@@ -76,6 +76,7 @@ for (const target of targets) {
     });
 }
 
+// TODO: do we want to add more coords to spoof?
 const coords = {
     hancock: {
         lat: 41.8988,
@@ -88,6 +89,7 @@ const coords = {
         zip: '98195',
     }
 }
+
 const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) => {
     let niceLink = linkObj.link.replace(/\//g, "-").replace(/:/g, '-'); // (nice for Windows filesystem)
     if (niceLink.length > 100) {
@@ -98,8 +100,13 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
     curDir = `${outDir}/${device.name}/${niceLink}`;
     mkdirp(curDir);
 
+
+
     const browser = await puppeteer.launch({
-        args: ['--no-sandbox', ],
+        args: [
+            '--no-sandbox',
+            `--proxy-server=your_proxy_ip:port`, // TODO: Add the proxy server address here
+            ],
         headless: headless
     });
     const context = browser.defaultBrowserContext();
@@ -108,6 +115,20 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
     //await context.overridePermissions(linkObj.link + '#', ['geolocation']);
     const page = await context.newPage();
     await page.setCacheEnabled(false);
+
+    // Clearing cookies to try to improve our geolocation spoofing.
+    await page.deleteCookie(...await page.cookies()); 
+
+    // Add the navigator.permissions.query override here, also to try to improve geolocation spoofing...
+    // Technically we already override the geolocation premission in line 111 at the browswer level, I think this does it on the site level.
+    await page.evaluateOnNewDocument(() => {
+        const originalQuery = window.navigator.permissions.query;
+        window.navigator.permissions.query = (parameters) => (
+            parameters.name === 'geolocation' ?
+            Promise.resolve({ state: 'granted' }) :
+            originalQuery(parameters)
+        );
+    });
 
     const cdp = await page.target().createCDPSession();
 
@@ -126,6 +147,7 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
         await dialog.accept();
     });
 
+    // Launch and load the page.
     console.log('Browser launched and page loaded');
     try {
         await page.goto(linkObj.link, {
@@ -141,11 +163,10 @@ const scrape = async (linkObj, device, platform, queryCat, dateStr, queryFile) =
     
 
     // Check geolocation permissions
-    // const granted = await page.evaluate(async () => {
-    //     return (await navigator.permissions.query({name: 'geolocation'})).state;
-    // });
-    // console.log('Granted:', granted);
-    
+    const granted = await page.evaluate(async () => {
+        return (await navigator.permissions.query({name: 'geolocation'})).state;
+    });
+    console.log('Granted:', granted);
     console.log('device:', device)
     console.log('platform', platform, 'ismobile', device.viewport.isMobile);
 
